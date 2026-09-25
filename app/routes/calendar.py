@@ -1,8 +1,15 @@
-﻿from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from app.routes import login_required, get_current_user
 from app.services.calendar_service import get_month_calendar_events
 
 calendar_bp = Blueprint('calendar', __name__)
+
+
+@calendar_bp.route('/calendar', methods=['GET'])
+@login_required
+def calendar_view():
+    user = get_current_user()
+    return render_template('calendar.html', user=user, active_page='calendar')
 
 
 @calendar_bp.route('/api/calendar/month', methods=['GET'])

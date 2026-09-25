@@ -1,0 +1,300 @@
+﻿{% extends "base.html" %}
+
+{% block title %}My Profile & Preferences | FitTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-text">
+    <h1>Profile & Preferences 👤</h1>
+    <p>Manage your personal biometric profile, BMI goals, and smart notification alerts.</p>
+  </div>
+</div>
+
+<div class="profile-grid-layout">
+  <!-- 1. Biometric Profile Form -->
+  <div class="card" style="padding: 1.5rem;">
+    <div class="card-header" style="padding: 0 0 1rem 0; margin-bottom: 1.25rem;">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <span style="font-size: 1.5rem;">⚖️</span>
+        <div>
+          <h3 style="font-size: 1.15rem; color: var(--text-main);">Biometric Profile</h3>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Manage physical measurements and BMI</span>
+        </div>
+      </div>
+      <span id="page-bmi-preview" class="badge">BMI: --</span>
+    </div>
+
+    <form id="page-profile-form">
+      <div class="form-group">
+        <label class="form-label" for="page_profile_name">Full Name *</label>
+        <input type="text" id="page_profile_name" class="form-input" required minlength="2" maxlength="100" value="{{ user.name if user else '' }}">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="page_profile_age">Age</label>
+          <input type="number" id="page_profile_age" class="form-input" min="5" max="120" value="{{ user.age if user and user.age else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="page_profile_gender">Gender</label>
+          <select id="page_profile_gender" class="form-select">
+            <option value="">Select</option>
+            <option value="Male" {% if user and user.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if user and user.gender == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Non-binary" {% if user and user.gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+            <option value="Prefer not to say" {% if user and user.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="page_profile_height">Height (cm)</label>
+          <input type="number" id="page_profile_height" class="form-input" step="0.5" min="50" max="300" value="{{ user.height if user and user.height else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="page_profile_weight">Weight (kg)</label>
+          <input type="number" id="page_profile_weight" class="form-input" step="0.1" min="20" max="500" value="{{ user.weight if user and user.weight else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="page_profile_fitness_goal">Primary Fitness Goal</label>
+        <select id="page_profile_fitness_goal" class="form-select">
+          <option value="General Fitness" {% if user and user.fitness_goal == 'General Fitness' %}selected{% endif %}>General Fitness</option>
+          <option value="Weight Loss" {% if user and user.fitness_goal == 'Weight Loss' %}selected{% endif %}>Weight Loss</option>
+          <option value="Muscle Building" {% if user and user.fitness_goal == 'Muscle Building' %}selected{% endif %}>Muscle Building</option>
+          <option value="Weight Gain" {% if user and user.fitness_goal == 'Weight Gain' %}selected{% endif %}>Weight Gain</option>
+          <option value="Endurance" {% if user and user.fitness_goal == 'Endurance' %}selected{% endif %}>Endurance</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+        Save Profile Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- 2. Smart Reminder Preferences -->
+  <div class="card" style="padding: 1.5rem;">
+    <div class="card-header" style="padding: 0 0 1rem 0; margin-bottom: 1.25rem;">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <span style="font-size: 1.5rem;">🔔</span>
+        <div>
+          <h3 style="font-size: 1.15rem; color: var(--text-main);">Smart Reminders</h3>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Personal notifications & thresholds</span>
+        </div>
+      </div>
+    </div>
+
+    <form id="page-reminders-form">
+      <div style="margin-bottom: 1.25rem; padding: 0.85rem; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size: 0.9rem; color:var(--text-main); display:block;">Desktop Push Alerts</strong>
+          <span style="font-size: 0.75rem; color:var(--text-muted);">Receive alerts directly in your browser</span>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="requestBrowserNotifications()">
+          Enable Push
+        </button>
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid var(--border-color);">
+        <div>
+          <label class="form-label" style="margin-bottom:0;" for="page_pref_daily_fitness">Daily Health Check-in</label>
+          <div class="form-hint">Prompt if daily weight/water/calories are missing</div>
+        </div>
+        <input type="checkbox" id="page_pref_daily_fitness" style="width:20px; height:20px; accent-color:var(--primary);">
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid var(--border-color);">
+        <div>
+          <label class="form-label" style="margin-bottom:0;" for="page_pref_workout">Workout Reminder</label>
+          <div class="form-hint">Prompt to train if no workout recorded today</div>
+        </div>
+        <input type="checkbox" id="page_pref_workout" style="width:20px; height:20px; accent-color:var(--primary);">
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid var(--border-color);">
+        <div>
+          <label class="form-label" style="margin-bottom:0;" for="page_pref_goal_deadline">Goal Deadline Alerts</label>
+          <div class="form-hint">Warn when target deadline is within 3 days or overdue</div>
+        </div>
+        <input type="checkbox" id="page_pref_goal_deadline" style="width:20px; height:20px; accent-color:var(--primary);">
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid var(--border-color);">
+        <div>
+          <label class="form-label" style="margin-bottom:0;" for="page_pref_hydration">Hydration Tracking Alert</label>
+          <div class="form-hint">Alert if daily water intake is under target</div>
+        </div>
+        <input type="checkbox" id="page_pref_hydration" style="width:20px; height:20px; accent-color:var(--primary);">
+      </div>
+
+      <div class="form-group" style="margin-top: 1rem;">
+        <label class="form-label" for="page_pref_hydration_target">Daily Hydration Target (Litres)</label>
+        <input type="number" id="page_pref_hydration_target" class="form-input" step="0.1" min="0.5" max="10.0" value="2.0">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+        Save Reminder Settings
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+<script>
+  // Page Profile Controller
+  function updatePageBmiPreview() {
+    const h = parseFloat(document.getElementById('page_profile_height').value);
+    const w = parseFloat(document.getElementById('page_profile_weight').value);
+    const badge = document.getElementById('page-bmi-preview');
+    if (!badge) return;
+
+    if (h > 0 && w > 0) {
+      const heightM = h / 100.0;
+      const bmi = (w / (heightM * heightM)).toFixed(1);
+      let category = "Normal";
+      let catClass = "badge-normal";
+
+      if (bmi < 18.5) {
+        category = "Underweight";
+        catClass = "badge-underweight";
+      } else if (bmi >= 25.0 && bmi < 30.0) {
+        category = "Overweight";
+        catClass = "badge-overweight";
+      } else if (bmi >= 30.0) {
+        category = "Obese";
+        catClass = "badge-obese";
+      }
+
+      badge.className = `badge ${catClass}`;
+      badge.innerText = `BMI: ${bmi} (${category})`;
+    } else {
+      badge.className = 'badge';
+      badge.innerText = 'BMI: --';
+    }
+  }
+
+  async function initProfilePage() {
+    updatePageBmiPreview();
+
+    // Load reminder preferences into page form
+    try {
+      const res = await apiRequest('/api/reminders/preferences');
+      if (res && res.success) {
+        const p = res.preferences;
+        document.getElementById('page_pref_daily_fitness').checked = p.daily_fitness_reminder;
+        document.getElementById('page_pref_workout').checked = p.workout_reminder;
+        document.getElementById('page_pref_goal_deadline').checked = p.goal_deadline_reminder;
+        document.getElementById('page_pref_hydration').checked = p.hydration_reminder;
+        document.getElementById('page_pref_hydration_target').value = p.hydration_target || 2.0;
+      }
+    } catch (err) {
+      console.error('Error loading preferences:', err);
+    }
+  }
+
+  // Handle Page Profile Submit
+  async function handlePageProfileSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+
+    const name = document.getElementById('page_profile_name').value.trim();
+    const age = document.getElementById('page_profile_age').value;
+    const gender = document.getElementById('page_profile_gender').value;
+    const height = document.getElementById('page_profile_height').value;
+    const weight = document.getElementById('page_profile_weight').value;
+    const fitnessGoal = document.getElementById('page_profile_fitness_goal').value;
+
+    if (!name) {
+      Toast.error('Name cannot be empty');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
+
+    try {
+      const res = await apiRequest('/api/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name,
+          age: age ? parseInt(age, 10) : null,
+          gender: gender || null,
+          height: height ? parseFloat(height) : null,
+          weight: weight ? parseFloat(weight) : null,
+          fitness_goal: fitnessGoal || 'General Fitness'
+        })
+      });
+
+      Toast.success('Profile updated successfully!');
+      updatePageBmiPreview();
+
+      // Update sidebar username and avatar live
+      const navName = document.getElementById('nav-user-name');
+      const navAvatar = document.getElementById('nav-user-avatar');
+      if (navName && res.user) navName.innerText = res.user.name;
+      if (navAvatar && res.user) navAvatar.innerText = res.user.name.charAt(0).toUpperCase();
+
+    } catch (err) {
+      Toast.error(err.message || 'Failed to update profile');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Save Profile Changes';
+    }
+  }
+
+  // Handle Page Reminders Submit
+  async function handlePageRemindersSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+
+    const daily_fitness = document.getElementById('page_pref_daily_fitness').checked;
+    const workout = document.getElementById('page_pref_workout').checked;
+    const goal_deadline = document.getElementById('page_pref_goal_deadline').checked;
+    const hydration = document.getElementById('page_pref_hydration').checked;
+    const hydration_target = parseFloat(document.getElementById('page_pref_hydration_target').value || 2.0);
+
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
+
+    try {
+      await apiRequest('/api/reminders/preferences', {
+        method: 'PUT',
+        body: JSON.stringify({
+          daily_fitness_reminder: daily_fitness,
+          workout_reminder: workout,
+          goal_deadline_reminder: goal_deadline,
+          hydration_reminder: hydration,
+          hydration_target: hydration_target
+        })
+      });
+
+      Toast.success('Reminder preferences updated!');
+    } catch (err) {
+      Toast.error(err.message || 'Failed to save reminder preferences');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Save Reminder Settings';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initProfilePage();
+
+    const hInput = document.getElementById('page_profile_height');
+    const wInput = document.getElementById('page_profile_weight');
+    if (hInput) hInput.addEventListener('input', updatePageBmiPreview);
+    if (wInput) wInput.addEventListener('input', updatePageBmiPreview);
+
+    const profileForm = document.getElementById('page-profile-form');
+    if (profileForm) profileForm.addEventListener('submit', handlePageProfileSubmit);
+
+    const remindersForm = document.getElementById('page-reminders-form');
+    if (remindersForm) remindersForm.addEventListener('submit', handlePageRemindersSubmit);
+  });
+</script>
+{% endblock %}

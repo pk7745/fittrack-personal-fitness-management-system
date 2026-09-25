@@ -1,36 +1,34 @@
 ﻿{% extends "base.html" %}
 
-{% block title %}Dashboard | FitTrack v1.1{% endblock %}
+{% block title %}Dashboard | FitTrack{% endblock %}
 
 {% block content %}
 <!-- Reminders Banner -->
-<div id="reminders-container" class="reminders-wrapper" style="display: none;">
-  <!-- Dynamically injected by reminders.js -->
-</div>
+<div id="reminders-container" class="reminders-wrapper" style="display: none;"></div>
 
-<!-- Welcome Hero -->
+<!-- Page Header / Welcome Hero -->
 <section class="welcome-hero">
   <div class="welcome-text">
-    <h1 id="user-greeting">Welcome back, Athlete 👋</h1>
-    <p>Here is your daily fitness performance, activity breakdown, and progress tracking.</p>
+    <h1 id="user-greeting">Welcome back, {{ user.name if user else 'Athlete' }} 👋</h1>
+    <p id="dashboard-date-str"></p>
+    <p style="color: var(--text-subtle); font-size: 0.85rem; margin-top: 0.25rem;">
+      Consistency is the key to progress. Here is your daily summary and performance snapshot.
+    </p>
   </div>
   <div class="hero-actions">
     <button class="btn btn-primary" onclick="openWorkoutModal()">
       <span>+</span> Log Workout
     </button>
     <button class="btn btn-secondary" onclick="openFitnessModal()">
-      <span>💧</span> Daily Metrics
+      <span>💧</span> Add Fitness Record
     </button>
     <button class="btn btn-secondary" onclick="openGoalModal()">
-      <span>🎯</span> Set Goal
-    </button>
-    <button class="btn btn-secondary" onclick="openRemindersModal()">
-      <span>🔔</span> Reminders
+      <span>🎯</span> Create Goal
     </button>
   </div>
 </section>
 
-<!-- 5 Statistics Cards -->
+<!-- 5 Key Statistics Cards -->
 <section class="stats-grid">
   <!-- BMI Card -->
   <div class="stat-card">
@@ -99,194 +97,29 @@
   </div>
 </section>
 
-<!-- Visual Analytics & Charts Section -->
-<section class="charts-grid" id="progress-section">
-  <!-- Weight Progress Chart -->
+<!-- Content Grid: Goals Overview & Recent Activity -->
+<section class="dashboard-content-grid" style="margin-top: 1.75rem;">
+  <!-- Goal Overview (Compact Summary) -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>📈</span> Weight Progress Over Time
+        <span>🎯</span> Active Goals Overview
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="openFitnessModal()">+ Update Weight</button>
+      <a href="{{ url_for('goal.goals_view') }}" class="btn btn-secondary btn-sm">Manage Goals &rarr;</a>
     </div>
-    <div class="chart-container">
-      <canvas id="weightProgressChart"></canvas>
+
+    <div id="goals-container" class="goals-list">
+      <!-- Dynamically populated by dashboard.js -->
     </div>
   </div>
 
-  <!-- Weekly Workout Frequency & Burn Chart -->
+  <!-- Recent Activity (Latest Workouts) -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>📊</span> 7-Day Workout Activity
+        <span>⚡</span> Recent Activity
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="openWorkoutModal()">+ Log Workout</button>
-    </div>
-    <div class="chart-container">
-      <canvas id="workoutActivityChart"></canvas>
-    </div>
-  </div>
-</section>
-
-<!-- Advanced Progress Analytics (v1.1) -->
-<section id="analytics-section" style="margin-bottom: 2rem;">
-  <div class="card-header" style="margin-bottom: 1rem;">
-    <div class="card-title" style="font-size: 1.25rem;">
-      <span>📊</span> Advanced Progress Analytics
-    </div>
-    <span class="badge badge-normal">Real-Time</span>
-  </div>
-
-  <div class="analytics-grid">
-    <!-- Weight Trajectory Analytics -->
-    <div class="analytics-card">
-      <h3 style="font-size: 1rem; color: var(--primary);">⚖️ Weight Trajectory</h3>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Current Weight:</span>
-        <span class="analytics-val" id="analytics-current-weight">--</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Starting Recorded:</span>
-        <span class="analytics-val" id="analytics-start-weight">--</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Change from Previous:</span>
-        <span class="analytics-val" id="analytics-prev-change">--</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Total Recorded Change:</span>
-        <span class="analytics-val" id="analytics-total-change">--</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">7-Day Trajectory:</span>
-        <span class="analytics-val" id="analytics-trend-7d">--</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">30-Day Trajectory:</span>
-        <span class="analytics-val" id="analytics-trend-30d">--</span>
-      </div>
-    </div>
-
-    <!-- Workout Consistency & Volume -->
-    <div class="analytics-card">
-      <h3 style="font-size: 1rem; color: var(--secondary);">🏃 Workout Performance</h3>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Total Workouts:</span>
-        <span class="analytics-val" id="analytics-total-workouts">0</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Workouts This Week:</span>
-        <span class="analytics-val" id="analytics-workouts-week">0</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Workouts This Month:</span>
-        <span class="analytics-val" id="analytics-workouts-month">0</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Weekly Average:</span>
-        <span class="analytics-val" id="analytics-avg-workouts">0.0 / wk</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Total Duration Logged:</span>
-        <span class="analytics-val" id="analytics-total-duration">0 mins</span>
-      </div>
-      <div class="analytics-metric-row" style="flex-direction: column; align-items: flex-start; gap: 0.35rem;">
-        <div style="display:flex; justify-content:space-between; width:100%;">
-          <span class="analytics-label">30-Day Activity Rate:</span>
-          <span class="analytics-val" id="analytics-activity-rate">0.0%</span>
-        </div>
-        <div class="progress-container" style="height:6px;">
-          <div class="progress-bar" id="analytics-activity-bar" style="width: 0%;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Nutrition & Daily Averages -->
-    <div class="analytics-card">
-      <h3 style="font-size: 1rem; color: var(--accent-purple);">🥗 Nutrition & Daily Averages</h3>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Average Water Intake:</span>
-        <span class="analytics-val" id="analytics-avg-water">0.0 L</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Average Daily Calories In:</span>
-        <span class="analytics-val" id="analytics-avg-cal-consumed">0 kcal</span>
-      </div>
-      <div class="analytics-metric-row">
-        <span class="analytics-label">Average Calories Burned / Workout:</span>
-        <span class="analytics-val" id="analytics-avg-cal-burned">0.0 kcal</span>
-      </div>
-      <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-subtle);">
-        Calculated across verified personal records.
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Workout Calendar Section (v1.1) -->
-<section id="calendar-section" style="margin-bottom: 2rem;">
-  <div class="card-header" style="margin-bottom: 1rem;">
-    <div class="card-title" style="font-size: 1.25rem;">
-      <span>📅</span> Workout & Health Calendar
-    </div>
-    <span class="badge badge-normal">Interactive</span>
-  </div>
-
-  <div class="calendar-card">
-    <div class="calendar-layout">
-      <!-- Calendar Grid Column -->
-      <div>
-        <div class="calendar-header">
-          <button class="calendar-nav-btn" onclick="prevMonth()">&larr; Prev</button>
-          <h3 id="calendar-month-title" style="font-size: 1.1rem; color: var(--text-main);">Loading...</h3>
-          <button class="calendar-nav-btn" onclick="nextMonth()">Next &rarr;</button>
-        </div>
-
-        <div class="calendar-grid-container" id="calendar-grid">
-          <!-- Dynamically populated by calendar.js -->
-        </div>
-
-        <div style="display:flex; gap: 1.25rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem;">
-          <span style="display:flex; align-items:center; gap: 4px;"><span class="cal-dot cal-dot-workout"></span> Workout Day</span>
-          <span style="display:flex; align-items:center; gap: 4px;"><span class="cal-dot cal-dot-metrics"></span> Health Metrics</span>
-          <span style="display:flex; align-items:center; gap: 4px;"><span class="cal-dot cal-dot-goal"></span> Goal Deadline</span>
-        </div>
-      </div>
-
-      <!-- Date Detail Inspector -->
-      <div>
-        <div class="calendar-detail-panel" id="calendar-detail-panel">
-          <p class="cal-no-events">Select any day on the calendar to view workouts, health entries, or goal deadlines.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Data Reports & Export Bar (v1.1) -->
-<section id="reports-section" class="reports-card">
-  <div>
-    <h3 style="font-size: 1.15rem; margin-bottom: 0.25rem;">📑 Data Reports & Exports</h3>
-    <p style="font-size: 0.85rem; color: var(--text-muted);">Export your verified fitness records, workout history, and goals in standard CSV or PDF.</p>
-  </div>
-  <div class="reports-actions">
-    <button class="btn btn-secondary btn-sm" onclick="exportReport('workouts')">📥 Workouts CSV</button>
-    <button class="btn btn-secondary btn-sm" onclick="exportReport('fitness')">📥 Fitness CSV</button>
-    <button class="btn btn-secondary btn-sm" onclick="exportReport('goals')">📥 Goals CSV</button>
-    <button class="btn btn-secondary btn-sm" onclick="exportReport('summary')">📥 Summary CSV</button>
-    <button class="btn btn-primary btn-sm" onclick="exportReport('pdf')">📄 Export PDF Report</button>
-  </div>
-</section>
-
-<!-- Detailed Grid: Recent Workouts & Fitness Goals -->
-<section class="dashboard-content-grid" id="workouts-section">
-  <!-- Recent Workouts -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <span>⚡</span> Recent Workouts
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openWorkoutModal()">+ New Workout</button>
+      <a href="{{ url_for('workout.workouts_view') }}" class="btn btn-secondary btn-sm">All Workouts &rarr;</a>
     </div>
 
     <div class="table-responsive">
@@ -307,292 +140,16 @@
       </table>
     </div>
   </div>
-
-  <!-- Fitness Goals -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <span>🎯</span> Active Goals
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="openGoalModal()">+ New Goal</button>
-    </div>
-
-    <div id="goals-container" class="goals-list">
-      <!-- Dynamically populated by dashboard.js -->
-    </div>
-  </div>
 </section>
+{% endblock %}
 
-<!-- ========================================================
-     MODALS
-     ======================================================== -->
-
-<!-- 1. Log Workout Modal -->
-<div id="workout-modal" class="modal-backdrop">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3>Log Workout Session</h3>
-      <button class="modal-close" onclick="closeWorkoutModal()" aria-label="Close modal">&times;</button>
-    </div>
-    <form id="workout-form">
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="exercise_name">Exercise Name *</label>
-          <input type="text" id="exercise_name" class="form-input" placeholder="e.g., Morning Run, Bench Press" required maxlength="120">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exercise_type">Exercise Type *</label>
-          <select id="exercise_type" class="form-select" required>
-            <option value="Strength">Strength</option>
-            <option value="Cardio">Cardio</option>
-            <option value="Running">Running</option>
-            <option value="Cycling">Cycling</option>
-            <option value="Walking">Walking</option>
-            <option value="Yoga">Yoga</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="duration">Duration (minutes) *</label>
-            <input type="number" id="duration" class="form-input" placeholder="45" min="1" max="1440" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="calories_burned">Calories Burned (kcal)</label>
-            <input type="number" id="calories_burned" class="form-input" placeholder="320" min="0" step="1">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="workout_date">Workout Date</label>
-          <input type="date" id="workout_date" class="form-input" required>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeWorkoutModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Workout</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- 2. Daily Fitness Metrics Modal -->
-<div id="fitness-modal" class="modal-backdrop">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3>Track Daily Health Metrics</h3>
-      <button class="modal-close" onclick="closeFitnessModal()" aria-label="Close modal">&times;</button>
-    </div>
-    <form id="fitness-form">
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="metric_date">Date</label>
-          <input type="date" id="metric_date" class="form-input" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="metric_weight">Weight (kg)</label>
-          <input type="number" id="metric_weight" class="form-input" placeholder="e.g. 68.5" step="0.1" min="20" max="500">
-          <div class="form-hint">Logging weight will also update your live BMI.</div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="metric_water">Water Intake (Litres)</label>
-            <input type="number" id="metric_water" class="form-input" placeholder="e.g. 2.5" step="0.1" min="0" max="20">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="metric_calories">Calories Consumed (kcal)</label>
-            <input type="number" id="metric_calories" class="form-input" placeholder="e.g. 1950" min="0" max="20000">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeFitnessModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Metrics</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- 3. Goal Creation Modal (Enhanced v1.1) -->
-<div id="goal-modal" class="modal-backdrop">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3>Create Fitness Goal</h3>
-      <button class="modal-close" onclick="closeGoalModal()" aria-label="Close modal">&times;</button>
-    </div>
-    <form id="goal-form">
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="goal_type">Goal Type *</label>
-          <select id="goal_type" class="form-select" required>
-            <option value="Weight Loss">Weight Loss (Target Weight in kg)</option>
-            <option value="Weight Gain">Weight Gain (Target Weight in kg)</option>
-            <option value="Muscle Building">Muscle Building (Sessions / Volume)</option>
-            <option value="General Fitness">General Fitness (Days Active)</option>
-            <option value="Endurance">Endurance (Target Distance in km)</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="target_value">Target Value *</label>
-            <input type="number" id="target_value" class="form-input" placeholder="e.g. 65" step="0.5" min="0.1" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="current_value">Current Starting Value</label>
-            <input type="number" id="current_value" class="form-input" placeholder="e.g. 70" step="0.5" min="0">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="start_value">Baseline / Initial Value</label>
-            <input type="number" id="start_value" class="form-input" placeholder="e.g. 80" step="0.5" min="0.1">
-            <div class="form-hint">Used to calculate precise progress towards target.</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="goal_deadline">Target Deadline</label>
-            <input type="date" id="goal_deadline" class="form-input">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeGoalModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Goal</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- 4. Profile Edit Modal -->
-<div id="profile-modal" class="modal-backdrop">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <h3>Fitness Profile</h3>
-        <span id="profile-bmi-preview" class="badge">BMI: --</span>
-      </div>
-      <button class="modal-close" onclick="closeProfileModal()" aria-label="Close modal">&times;</button>
-    </div>
-    <form id="profile-form">
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="profile_name">Full Name *</label>
-          <input type="text" id="profile_name" class="form-input" required minlength="2" maxlength="100">
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="profile_age">Age</label>
-            <input type="number" id="profile_age" class="form-input" min="5" max="120">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="profile_gender">Gender</label>
-            <select id="profile_gender" class="form-select">
-              <option value="">Select</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Non-binary">Non-binary</option>
-              <option value="Prefer not to say">Prefer not to say</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="profile_height">Height (cm)</label>
-            <input type="number" id="profile_height" class="form-input" step="0.5" min="50" max="300">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="profile_weight">Weight (kg)</label>
-            <input type="number" id="profile_weight" class="form-input" step="0.1" min="20" max="500">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="profile_fitness_goal">Primary Fitness Goal</label>
-          <select id="profile_fitness_goal" class="form-select">
-            <option value="General Fitness">General Fitness</option>
-            <option value="Weight Loss">Weight Loss</option>
-            <option value="Muscle Building">Muscle Building</option>
-            <option value="Weight Gain">Weight Gain</option>
-            <option value="Endurance">Endurance</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- 5. Reminders Preferences Modal (v1.1) -->
-<div id="reminders-modal" class="modal-backdrop">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3>Smart Reminder Preferences</h3>
-      <button class="modal-close" onclick="closeRemindersModal()" aria-label="Close modal">&times;</button>
-    </div>
-    <form id="reminders-form">
-      <div class="modal-body">
-        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 1rem;">
-          Configure personal non-intrusive reminder alerts. Enable browser notifications for desktop alerts.
-        </p>
-
-        <div style="margin-bottom: 1rem;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="requestBrowserNotifications()">
-            🔔 Enable Browser Notifications
-          </button>
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border-color);">
-          <div>
-            <label class="form-label" style="margin-bottom:0;" for="pref_daily_fitness">Daily Health Check-in</label>
-            <div class="form-hint">Alert if metrics haven't been logged today</div>
-          </div>
-          <input type="checkbox" id="pref_daily_fitness" style="width:18px; height:18px; accent-color:var(--primary);">
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border-color);">
-          <div>
-            <label class="form-label" style="margin-bottom:0;" for="pref_workout">Workout Reminder</label>
-            <div class="form-hint">Prompt to stay active if no workout logged today</div>
-          </div>
-          <input type="checkbox" id="pref_workout" style="width:18px; height:18px; accent-color:var(--primary);">
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border-color);">
-          <div>
-            <label class="form-label" style="margin-bottom:0;" for="pref_goal_deadline">Goal Deadlines</label>
-            <div class="form-hint">Alert when goals are approaching deadline or overdue</div>
-          </div>
-          <input type="checkbox" id="pref_goal_deadline" style="width:18px; height:18px; accent-color:var(--primary);">
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border-color);">
-          <div>
-            <label class="form-label" style="margin-bottom:0;" for="pref_hydration">Hydration Tracking Alert</label>
-            <div class="form-hint">Prompt if daily water intake is under target</div>
-          </div>
-          <input type="checkbox" id="pref_hydration" style="width:18px; height:18px; accent-color:var(--primary);">
-        </div>
-
-        <div class="form-group" style="margin-top: 1rem;">
-          <label class="form-label" for="pref_hydration_target">Personal Hydration Target (Litres)</label>
-          <input type="number" id="pref_hydration_target" class="form-input" step="0.1" min="0.5" max="10.0" value="2.0">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeRemindersModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Settings</button>
-      </div>
-    </form>
-  </div>
-</div>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  // Set readable current date
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dateEl = document.getElementById('dashboard-date-str');
+  if (dateEl) dateEl.innerText = `Today is ${dateStr}`;
+</script>
 {% endblock %}

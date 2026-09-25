@@ -1,0 +1,319 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Progress & Analytics | FitTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-text">
+    <h1>Progress & Analytics 📈</h1>
+    <p>Comprehensive health trends, body composition trajectories, and training consistency analytics.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" onclick="openFitnessModal()">
+      <span>💧</span> Log Daily Metrics
+    </button>
+    <button class="btn btn-secondary" onclick="loadProgressPage()">
+      <span>🔄</span> Refresh
+    </button>
+  </div>
+</div>
+
+<!-- Advanced Progress Analytics Grid -->
+<section id="analytics-section" style="margin-bottom: 2rem;">
+  <div class="analytics-grid">
+    <!-- Weight Trajectory Analytics -->
+    <div class="analytics-card">
+      <h3 style="font-size: 1.05rem; color: var(--primary); margin-bottom: 0.75rem;">⚖️ Weight Trajectory</h3>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Current Weight:</span>
+        <span class="analytics-val" id="analytics-current-weight">--</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Starting Recorded:</span>
+        <span class="analytics-val" id="analytics-start-weight">--</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Change from Previous:</span>
+        <span class="analytics-val" id="analytics-prev-change">--</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Total Recorded Change:</span>
+        <span class="analytics-val" id="analytics-total-change">--</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">7-Day Trajectory:</span>
+        <span class="analytics-val" id="analytics-trend-7d">--</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">30-Day Trajectory:</span>
+        <span class="analytics-val" id="analytics-trend-30d">--</span>
+      </div>
+    </div>
+
+    <!-- Workout Consistency & Volume -->
+    <div class="analytics-card">
+      <h3 style="font-size: 1.05rem; color: var(--secondary); margin-bottom: 0.75rem;">🏃 Workout Performance</h3>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Total Workouts:</span>
+        <span class="analytics-val" id="analytics-total-workouts">0</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Workouts This Week:</span>
+        <span class="analytics-val" id="analytics-workouts-week">0</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Workouts This Month:</span>
+        <span class="analytics-val" id="analytics-workouts-month">0</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Weekly Average:</span>
+        <span class="analytics-val" id="analytics-avg-workouts">0.0 / wk</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Total Duration Logged:</span>
+        <span class="analytics-val" id="analytics-total-duration">0 mins</span>
+      </div>
+      <div class="analytics-metric-row" style="flex-direction: column; align-items: flex-start; gap: 0.35rem;">
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span class="analytics-label">30-Day Activity Rate:</span>
+          <span class="analytics-val" id="analytics-activity-rate">0.0%</span>
+        </div>
+        <div class="progress-container" style="height:6px; width: 100%;">
+          <div class="progress-bar" id="analytics-activity-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nutrition & Daily Averages -->
+    <div class="analytics-card">
+      <h3 style="font-size: 1.05rem; color: var(--accent-purple); margin-bottom: 0.75rem;">🥗 Nutrition & Daily Averages</h3>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Average Water Intake:</span>
+        <span class="analytics-val" id="analytics-avg-water">0.0 L</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Average Daily Calories In:</span>
+        <span class="analytics-val" id="analytics-avg-cal-consumed">0 kcal</span>
+      </div>
+      <div class="analytics-metric-row">
+        <span class="analytics-label">Average Calories Burned / Workout:</span>
+        <span class="analytics-val" id="analytics-avg-cal-burned">0.0 kcal</span>
+      </div>
+      <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-subtle);">
+        Calculated across verified personal records.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Visual Analytics & Charts Section -->
+<section class="charts-grid" id="progress-charts-section">
+  <!-- Weight Progress Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📈</span> Weight Progress Over Time
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="openFitnessModal()">+ Update Weight</button>
+    </div>
+    <div class="chart-container" style="position:relative; min-height: 280px;">
+      <canvas id="weightProgressChart"></canvas>
+      <div id="weight-chart-empty" class="empty-state" style="display:none; position:absolute; inset:0; justify-content:center;">
+        <div class="empty-state-icon">⚖️</div>
+        <p>Not enough data yet. Log your weight to see progress trends!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Workout Frequency & Burn Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📊</span> 7-Day Workout Activity
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="openWorkoutModal()">+ Log Workout</button>
+    </div>
+    <div class="chart-container" style="position:relative; min-height: 280px;">
+      <canvas id="workoutActivityChart"></canvas>
+      <div id="activity-chart-empty" class="empty-state" style="display:none; position:absolute; inset:0; justify-content:center;">
+        <div class="empty-state-icon">🏃‍♂️</div>
+        <p>Not enough data yet. Log workouts to see your weekly burn curve!</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+<script>
+  let progressWeightChart = null;
+  let progressActivityChart = null;
+
+  async function loadProgressPage() {
+    // 1. Load Advanced Analytics metrics
+    if (typeof loadAnalytics === 'function') {
+      await loadAnalytics();
+    }
+
+    // 2. Load Charts data from dashboard API
+    try {
+      const data = await apiRequest('/api/dashboard');
+      if (!data || !data.success) return;
+
+      const { charts } = data;
+      renderProgressWeightChart(charts.weight_history);
+      renderProgressActivityChart(charts.workout_activity);
+    } catch (err) {
+      console.error('Error loading progress charts:', err);
+    }
+  }
+
+  function renderProgressWeightChart(history) {
+    const canvas = document.getElementById('weightProgressChart');
+    const emptyBox = document.getElementById('weight-chart-empty');
+    if (!canvas) return;
+
+    const labels = (history && history.labels) || [];
+    const weights = (history && history.weights) || [];
+
+    if (weights.length === 0) {
+      canvas.style.display = 'none';
+      if (emptyBox) emptyBox.style.display = 'flex';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyBox) emptyBox.style.display = 'none';
+
+    if (progressWeightChart) {
+      progressWeightChart.destroy();
+    }
+
+    progressWeightChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Weight (kg)',
+          data: weights,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.12)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#10b981',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.35,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(55, 65, 81, 0.3)' },
+            ticks: { color: '#9ca3af', font: { size: 11 } }
+          },
+          y: {
+            grid: { color: 'rgba(55, 65, 81, 0.3)' },
+            ticks: { color: '#9ca3af', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  function renderProgressActivityChart(activity) {
+    const canvas = document.getElementById('workoutActivityChart');
+    const emptyBox = document.getElementById('activity-chart-empty');
+    if (!canvas) return;
+
+    const labels = (activity && activity.labels) || [];
+    const counts = (activity && activity.counts) || [];
+    const calories = (activity && activity.calories) || [];
+
+    const hasAnyActivity = counts.some(c => c > 0) || calories.some(c => c > 0);
+    if (!hasAnyActivity) {
+      canvas.style.display = 'none';
+      if (emptyBox) emptyBox.style.display = 'flex';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyBox) emptyBox.style.display = 'none';
+
+    if (progressActivityChart) {
+      progressActivityChart.destroy();
+    }
+
+    progressActivityChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Workouts',
+            data: counts,
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            borderRadius: 6,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'Calories Burned (kcal)',
+            data: calories,
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointBackgroundColor: '#f59e0b',
+            pointRadius: 4,
+            tension: 0.3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#9ca3af', boxWidth: 12 }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(55, 65, 81, 0.2)' },
+            ticks: { color: '#9ca3af', font: { size: 11 } }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            beginAtZero: true,
+            ticks: { stepSize: 1, color: '#3b82f6', font: { size: 11 } },
+            grid: { color: 'rgba(55, 65, 81, 0.3)' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            beginAtZero: true,
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#f59e0b', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', loadProgressPage);
+  window.loadProgressPage = loadProgressPage;
+</script>
+{% endblock %}

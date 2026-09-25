@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -12,71 +12,301 @@
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
-<body>
-  <!-- Navigation Header -->
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="{{ url_for('dashboard.index') }}" class="nav-brand">
-        <div class="brand-icon">⚡</div>
-        <span>FitTrack <span style="font-size:0.65rem; background:rgba(16,185,129,0.2); color:var(--primary); padding:2px 6px; border-radius:4px; vertical-align:middle;">v1.1</span></span>
-      </a>
+<body class="{% if session.get('user_id') %}has-sidebar{% else %}auth-body{% endif %}">
+  {% if session.get('user_id') %}
+  <!-- Mobile Header (Visible on screens <= 768px) -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" id="mobile-menu-toggle" aria-label="Toggle navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="{{ url_for('dashboard.dashboard_view') }}" class="mobile-brand">
+      <div class="brand-icon">⚡</div>
+      <span>FitTrack</span>
+    </a>
+    <a href="{{ url_for('profile.profile_view') }}" class="user-avatar-link" title="My Profile">
+      <span class="avatar-circle">
+        {{ user.name[0].upper() if user and user.name else 'U' }}
+      </span>
+    </a>
+  </header>
 
-      {% if session.get('user_id') %}
-      <nav>
-        <ul class="nav-links">
-          <li><a href="{{ url_for('dashboard.index') }}" class="nav-link active">Dashboard</a></li>
-          <li><a href="#analytics-section" class="nav-link">Analytics</a></li>
-          <li><a href="#calendar-section" class="nav-link">Calendar</a></li>
-          <li><a href="#reports-section" class="nav-link">Reports</a></li>
-          <li><span class="nav-link" onclick="openRemindersModal()">🔔 Reminders</span></li>
-          <li><span class="nav-link" onclick="openProfileModal()">Profile</span></li>
+  <!-- Mobile Sidebar Backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- App Layout with Fixed Sidebar -->
+  <div class="app-layout">
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="sidebar-brand">
+        <a href="{{ url_for('dashboard.dashboard_view') }}" class="nav-brand">
+          <div class="brand-icon">⚡</div>
+          <span>FitTrack <span class="badge-version">v1.1</span></span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul class="sidebar-menu">
           <li>
-            <div class="user-badge" onclick="openProfileModal()" style="cursor:pointer;" title="Edit Profile">
-              <span class="avatar-circle" id="nav-user-avatar">
-                {{ user.name[0].upper() if user and user.name else 'U' }}
-              </span>
-              <span id="nav-user-name">{{ user.name if user else 'User' }}</span>
-            </div>
+            <a href="{{ url_for('dashboard.dashboard_view') }}" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}">
+              <span class="sidebar-icon">🏠</span>
+              <span class="sidebar-text">Dashboard</span>
+            </a>
           </li>
-          <li><a href="javascript:void(0)" onclick="handleLogout()" class="nav-link" style="color:var(--danger);">Logout</a></li>
+          <li>
+            <a href="{{ url_for('workout.workouts_view') }}" class="sidebar-link {% if active_page == 'workouts' %}active{% endif %}">
+              <span class="sidebar-icon">🏋️</span>
+              <span class="sidebar-text">Workouts</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('analytics.progress_view') }}" class="sidebar-link {% if active_page == 'progress' %}active{% endif %}">
+              <span class="sidebar-icon">📈</span>
+              <span class="sidebar-text">Progress</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('goal.goals_view') }}" class="sidebar-link {% if active_page == 'goals' %}active{% endif %}">
+              <span class="sidebar-icon">🎯</span>
+              <span class="sidebar-text">Goals</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('calendar.calendar_view') }}" class="sidebar-link {% if active_page == 'calendar' %}active{% endif %}">
+              <span class="sidebar-icon">📅</span>
+              <span class="sidebar-text">Calendar</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('report.reports_view') }}" class="sidebar-link {% if active_page == 'reports' %}active{% endif %}">
+              <span class="sidebar-icon">📄</span>
+              <span class="sidebar-text">Reports</span>
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('profile.profile_view') }}" class="sidebar-link {% if active_page == 'profile' %}active{% endif %}">
+              <span class="sidebar-icon">👤</span>
+              <span class="sidebar-text">Profile</span>
+            </a>
+          </li>
         </ul>
       </nav>
-      {% else %}
+
+      <div class="sidebar-footer">
+        <a href="{{ url_for('profile.profile_view') }}" class="sidebar-user" title="View Profile">
+          <span class="avatar-circle" id="nav-user-avatar">
+            {{ user.name[0].upper() if user and user.name else 'U' }}
+          </span>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name" id="nav-user-name">{{ user.name if user else 'Athlete' }}</span>
+            <span class="sidebar-user-role">Member</span>
+          </div>
+        </a>
+        <a href="javascript:void(0)" onclick="handleLogout()" class="sidebar-logout" title="Sign Out">
+          <span class="sidebar-icon">🚪</span>
+          <span class="sidebar-text">Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="app-main">
+      <main class="main-content">
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="footer">
+        <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System v1.1 &bull; Real-Time & Productivity</p>
+      </footer>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Unauthenticated Top Navbar -->
+  <header class="navbar auth-navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('auth.login_view') }}" class="nav-brand">
+        <div class="brand-icon">⚡</div>
+        <span>FitTrack <span class="badge-version">v1.1</span></span>
+      </a>
       <nav>
         <ul class="nav-links">
           <li><a href="{{ url_for('auth.login_view') }}" class="nav-link">Sign In</a></li>
           <li><a href="{{ url_for('auth.register_view') }}" class="btn btn-primary btn-sm">Get Started</a></li>
         </ul>
       </nav>
-      {% endif %}
     </div>
   </header>
 
-  <!-- Main Content Block -->
   <main class="main-content">
-    {% block content %}{% endblock %}
+    {% block content_auth %}{% block content_unauth %}{% endblock %}{% endblock %}
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System v1.1 &bull; Real-Time & Productivity</p>
+    <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System v1.1</p>
   </footer>
+  {% endif %}
+
+  <!-- ========================================================
+       SHARED MODALS
+       ======================================================== -->
+
+  <!-- 1. Log Workout Modal -->
+  <div id="workout-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Log Workout Session</h3>
+        <button class="modal-close" onclick="closeWorkoutModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="workout-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="exercise_name">Exercise Name *</label>
+            <input type="text" id="exercise_name" class="form-input" placeholder="e.g., Morning Run, Bench Press" required maxlength="120">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="exercise_type">Exercise Type *</label>
+            <select id="exercise_type" class="form-select" required>
+              <option value="Strength">Strength</option>
+              <option value="Cardio">Cardio</option>
+              <option value="Running">Running</option>
+              <option value="Cycling">Cycling</option>
+              <option value="Walking">Walking</option>
+              <option value="Yoga">Yoga</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="duration">Duration (minutes) *</label>
+              <input type="number" id="duration" class="form-input" placeholder="45" min="1" max="1440" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="calories_burned">Calories Burned (kcal)</label>
+              <input type="number" id="calories_burned" class="form-input" placeholder="320" min="0" step="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="workout_date">Workout Date</label>
+            <input type="date" id="workout_date" class="form-input" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeWorkoutModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Workout</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Daily Fitness Metrics Modal -->
+  <div id="fitness-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Track Daily Health Metrics</h3>
+        <button class="modal-close" onclick="closeFitnessModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="fitness-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="metric_date">Date</label>
+            <input type="date" id="metric_date" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="metric_weight">Weight (kg)</label>
+            <input type="number" id="metric_weight" class="form-input" placeholder="e.g. 68.5" step="0.1" min="20" max="500">
+            <div class="form-hint">Logging weight will also update your live BMI.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="metric_water">Water Intake (Litres)</label>
+              <input type="number" id="metric_water" class="form-input" placeholder="e.g. 2.5" step="0.1" min="0" max="20">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="metric_calories">Calories Consumed (kcal)</label>
+              <input type="number" id="metric_calories" class="form-input" placeholder="e.g. 1950" min="0" max="20000">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeFitnessModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Metrics</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Goal Creation Modal -->
+  <div id="goal-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create Fitness Goal</h3>
+        <button class="modal-close" onclick="closeGoalModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="goal-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="goal_type">Goal Type *</label>
+            <select id="goal_type" class="form-select" required>
+              <option value="Weight Loss">Weight Loss (Target Weight in kg)</option>
+              <option value="Weight Gain">Weight Gain (Target Weight in kg)</option>
+              <option value="Muscle Building">Muscle Building (Sessions / Volume)</option>
+              <option value="General Fitness">General Fitness (Days Active)</option>
+              <option value="Endurance">Endurance (Target Distance in km)</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="target_value">Target Value *</label>
+              <input type="number" id="target_value" class="form-input" placeholder="e.g. 65" step="0.5" min="0.1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="current_value">Current Starting Value</label>
+              <input type="number" id="current_value" class="form-input" placeholder="e.g. 70" step="0.5" min="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="start_value">Baseline / Initial Value</label>
+              <input type="number" id="start_value" class="form-input" placeholder="e.g. 80" step="0.5" min="0.1">
+              <div class="form-hint">Used to calculate precise progress towards target.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="goal_deadline">Target Deadline</label>
+              <input type="date" id="goal_deadline" class="form-input">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeGoalModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Toast Notification Container -->
   <div id="toast-container" aria-live="polite"></div>
 
-  <!-- Vanilla JavaScript Modules -->
+  <!-- Shared Vanilla JavaScript Modules -->
   <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
   <script src="{{ url_for('static', filename='js/api.js') }}"></script>
   <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/navigation.js') }}"></script>
   <script src="{{ url_for('static', filename='js/workout.js') }}"></script>
   <script src="{{ url_for('static', filename='js/fitness.js') }}"></script>
   <script src="{{ url_for('static', filename='js/goal.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
   <script src="{{ url_for('static', filename='js/reminders.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/reports.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+  <!-- Page-specific scripts -->
+  {% block scripts %}{% endblock %}
 </body>
 </html>
+

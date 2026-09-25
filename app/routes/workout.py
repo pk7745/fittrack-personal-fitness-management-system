@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from app.models import Workout
 from app.routes import login_required, get_current_user
 from app.services.workout_service import (
@@ -9,6 +9,13 @@ from app.services.workout_service import (
 )
 
 workout_bp = Blueprint('workout', __name__)
+
+
+@workout_bp.route('/workouts', methods=['GET'])
+@login_required
+def workouts_view():
+    user = get_current_user()
+    return render_template('workouts.html', user=user, active_page='workouts')
 
 
 @workout_bp.route('/api/workouts', methods=['GET'])

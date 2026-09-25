@@ -1,10 +1,17 @@
-﻿from datetime import date
-from flask import Blueprint, request, jsonify
+from datetime import date
+from flask import Blueprint, request, jsonify, render_template
 from app.models import db, User, FitnessRecord
 from app.routes import login_required, get_current_user
 from app.services.fitness_service import calculate_bmi, get_bmi_category
 
 profile_bp = Blueprint('profile', __name__)
+
+
+@profile_bp.route('/profile', methods=['GET'])
+@login_required
+def profile_view():
+    user = get_current_user()
+    return render_template('profile.html', user=user, active_page='profile')
 
 
 @profile_bp.route('/api/profile', methods=['GET'])

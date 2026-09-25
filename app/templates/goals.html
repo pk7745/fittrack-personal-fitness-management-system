@@ -1,0 +1,94 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Fitness Goals | FitTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-text">
+    <h1>Fitness Goals 🎯</h1>
+    <p>Set targets, track baseline progression, monitor milestones, and stay ahead of deadlines.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" onclick="openGoalModal()">
+      <span>+</span> Create New Goal
+    </button>
+  </div>
+</div>
+
+<!-- Goals Summary Counters -->
+<section class="stats-grid" style="margin-bottom: 2rem;">
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Total Goals</span>
+      <span class="stat-icon">🎯</span>
+    </div>
+    <div class="stat-value">
+      <span id="goal-stat-total">0</span>
+    </div>
+    <div class="stat-meta">Active and completed</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">In Progress</span>
+      <span class="stat-icon">⚡</span>
+    </div>
+    <div class="stat-value">
+      <span id="goal-stat-active" style="color: var(--secondary);">0</span>
+    </div>
+    <div class="stat-meta">Currently tracking</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Completed</span>
+      <span class="stat-icon">🏆</span>
+    </div>
+    <div class="stat-value">
+      <span id="goal-stat-completed" style="color: var(--primary);">0</span>
+    </div>
+    <div class="stat-meta">Target achieved</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Overdue</span>
+      <span class="stat-icon">⚠️</span>
+    </div>
+    <div class="stat-value">
+      <span id="goal-stat-overdue" style="color: var(--danger);">0</span>
+    </div>
+    <div class="stat-meta">Past target deadline</div>
+  </div>
+</section>
+
+<!-- Filter Navigation Bar -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem; flex-wrap:wrap; gap:0.75rem;">
+  <div style="display:flex; gap:0.5rem;">
+    <button class="btn btn-primary btn-sm goals-filter-btn" data-filter="all" onclick="setGoalFilter('all')">All</button>
+    <button class="btn btn-secondary btn-sm goals-filter-btn" data-filter="active" onclick="setGoalFilter('active')">Active</button>
+    <button class="btn btn-secondary btn-sm goals-filter-btn" data-filter="completed" onclick="setGoalFilter('completed')">Completed</button>
+    <button class="btn btn-secondary btn-sm goals-filter-btn" data-filter="overdue" onclick="setGoalFilter('overdue')">Overdue</button>
+  </div>
+  <button class="btn btn-secondary btn-sm" onclick="loadGoalsPage()">🔄 Refresh</button>
+</div>
+
+<!-- Goals List Container -->
+<section id="goals-page-list">
+  <!-- Dynamically populated by goal.js -->
+  <div class="empty-state" style="padding: 3rem 1rem;">
+    <div class="empty-state-icon">🎯</div>
+    <p>Loading your goals...</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.loadGoalsPage === 'function') {
+      window.loadGoalsPage();
+    }
+  });
+</script>
+{% endblock %}

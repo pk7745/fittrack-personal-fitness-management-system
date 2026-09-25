@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, jsonify, render_template, session
+from flask import Blueprint, jsonify, render_template, session, redirect, url_for
 from app.routes import login_required, get_current_user
 from app.models import Goal
 from app.services.fitness_service import (
@@ -17,8 +17,14 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @dashboard_bp.route('/', methods=['GET'])
 @login_required
 def index():
+    return redirect(url_for('dashboard.dashboard_view'))
+
+
+@dashboard_bp.route('/dashboard', methods=['GET'])
+@login_required
+def dashboard_view():
     user = get_current_user()
-    return render_template('dashboard.html', user=user)
+    return render_template('dashboard.html', user=user, active_page='dashboard')
 
 
 @dashboard_bp.route('/api/dashboard', methods=['GET'])

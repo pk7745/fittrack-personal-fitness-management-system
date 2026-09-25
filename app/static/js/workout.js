@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Workout tracking and CRUD management
  */
 function openWorkoutModal() {
@@ -60,6 +60,12 @@ async function handleWorkoutSubmit(e) {
 
     Toast.success('Workout logged successfully!');
     closeWorkoutModal();
+
+    // Real-time update for /workouts page
+    if (typeof loadWorkoutsPage === 'function' && document.getElementById('page-workouts-tbody')) {
+      loadWorkoutsPage();
+    }
+    // Real-time update for /dashboard page
     if (window.dashboard && window.dashboard.refresh) {
       window.dashboard.refresh();
     }
@@ -81,6 +87,12 @@ async function deleteWorkout(workoutId) {
       method: 'DELETE'
     });
     Toast.success('Workout deleted successfully');
+
+    // Real-time update for /workouts page
+    if (typeof loadWorkoutsPage === 'function' && document.getElementById('page-workouts-tbody')) {
+      loadWorkoutsPage();
+    }
+    // Real-time update for /dashboard page
     if (window.dashboard && window.dashboard.refresh) {
       window.dashboard.refresh();
     }
@@ -89,11 +101,90 @@ async function deleteWorkout(workoutId) {
   }
 }
 
+async function loadWorkoutsPage() {
+  const tbody = document.getElementById('page-workouts-tbody');
+  if (!tbody) return;
+
+  try {
+    const [workoutsRes, dashRes] = await Promise.all([
+      apiRequest('/api/workouts'),
+      apiRequest('/api/dashboard')
+    ]);
+
+    if (dashRes && dashRes.success) {
+      const stats = dashRes.workouts || {};
+      const totalEl = document.getElementById('workout-stat-total');
+      const weekEl = document.getElementById('workout-stat-week');
+      const calTodayEl = document.getElementById('workout-stat-calories-today');
+      const calWeekEl = document.getElementById('workout-stat-calories-week');
+
+      if (totalEl) totalEl.innerText = workoutsRes.count !== undefined ? workoutsRes.count : (workoutsRes.workouts ? workoutsRes.workouts.length : 0);
+      if (weekEl) weekEl.innerText = stats.weekly !== undefined ? stats.weekly : 0;
+      if (calTodayEl) calTodayEl.innerText = (stats.today_calories || 0).toLocaleString();
+      if (calWeekEl) calWeekEl.innerText = (stats.weekly_calories || 0).toLocaleString();
+    }
+
+    const badge = document.getElementById('workout-count-badge');
+    const workouts = workoutsRes.workouts || [];
+    if (badge) badge.innerText = `${workouts.length} session${workouts.length === 1 ? '' : 's'}`;
+
+    if (workouts.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <div class="empty-state-icon">🏋️</div>
+              <p>No workouts recorded yet. Start tracking your fitness journey!</p>
+              <button class="btn btn-primary btn-sm" onclick="openWorkoutModal()">+ Log First Workout</button>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = workouts.map(w => `
+      <tr>
+        <td><strong>${escapeHtml(w.exercise_name)}</strong></td>
+        <td><span class="badge badge-type">${escapeHtml(w.exercise_type)}</span></td>
+        <td>${w.duration} mins</td>
+        <td>${w.calories_burned} kcal</td>
+        <td>${w.workout_date}</td>
+        <td style="text-align: right;">
+          <button class="btn-icon" onclick="deleteWorkout(${w.id})" title="Delete workout" aria-label="Delete workout">
+            🗑
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error('Error loading workouts page:', err);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:1.5rem;">Failed to load workout history</td></tr>`;
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[tag] || tag));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('workout-form');
   if (form) form.addEventListener('submit', handleWorkoutSubmit);
+  if (document.getElementById('page-workouts-tbody')) {
+    loadWorkoutsPage();
+  }
 });
 
 window.openWorkoutModal = openWorkoutModal;
 window.closeWorkoutModal = closeWorkoutModal;
 window.deleteWorkout = deleteWorkout;
+window.loadWorkoutsPage = loadWorkoutsPage;
+

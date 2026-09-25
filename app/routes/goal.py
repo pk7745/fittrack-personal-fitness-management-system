@@ -1,5 +1,5 @@
-﻿from datetime import datetime
-from flask import Blueprint, request, jsonify
+from datetime import datetime
+from flask import Blueprint, request, jsonify, render_template
 from app.models import db, Goal
 from app.routes import login_required, get_current_user
 from app.services.fitness_service import calculate_goal_progress
@@ -13,6 +13,13 @@ VALID_GOAL_TYPES = [
     'General Fitness',
     'Endurance'
 ]
+
+
+@goal_bp.route('/goals', methods=['GET'])
+@login_required
+def goals_view():
+    user = get_current_user()
+    return render_template('goals.html', user=user, active_page='goals')
 
 
 @goal_bp.route('/api/goals', methods=['GET'])

@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, Response, make_response, jsonify
+from flask import Blueprint, Response, make_response, jsonify, render_template
 from app.routes import login_required, get_current_user
 from app.services.report_service import (
     generate_fitness_csv,
@@ -9,6 +9,13 @@ from app.services.report_service import (
 )
 
 report_bp = Blueprint('report', __name__)
+
+
+@report_bp.route('/reports', methods=['GET'])
+@login_required
+def reports_view():
+    user = get_current_user()
+    return render_template('reports.html', user=user, active_page='reports')
 
 
 @report_bp.route('/api/reports/fitness.csv', methods=['GET'])

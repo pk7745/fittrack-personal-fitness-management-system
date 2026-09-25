@@ -1,0 +1,112 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Workouts | FitTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-text">
+    <h1>Workout Sessions 🏋️</h1>
+    <p>Track exercises, training duration, and calories burned with full historical logging.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" onclick="openWorkoutModal()">
+      <span>+</span> Log New Workout
+    </button>
+  </div>
+</div>
+
+<!-- Workout Summary Stats Grid -->
+<section class="stats-grid" style="margin-bottom: 2rem;">
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Total Workouts</span>
+      <span class="stat-icon">🏃‍♂️</span>
+    </div>
+    <div class="stat-value">
+      <span id="workout-stat-total">0</span>
+    </div>
+    <div class="stat-meta">Lifetime logged sessions</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">This Week</span>
+      <span class="stat-icon">📅</span>
+    </div>
+    <div class="stat-value">
+      <span id="workout-stat-week">0</span>
+    </div>
+    <div class="stat-meta">Sessions in past 7 days</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Today's Burn</span>
+      <span class="stat-icon">🔥</span>
+    </div>
+    <div class="stat-value">
+      <span id="workout-stat-calories-today">0</span>
+      <span class="stat-unit">kcal</span>
+    </div>
+    <div class="stat-meta">Calories burned today</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Weekly Burn</span>
+      <span class="stat-icon">⚡</span>
+    </div>
+    <div class="stat-value">
+      <span id="workout-stat-calories-week">0</span>
+      <span class="stat-unit">kcal</span>
+    </div>
+    <div class="stat-meta">Total kcal burned this week</div>
+  </div>
+</section>
+
+<!-- Workout History Card -->
+<section class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📋</span> Workout History
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <span id="workout-count-badge" class="badge badge-normal">0 sessions</span>
+      <button class="btn btn-secondary btn-sm" onclick="loadWorkoutsPage()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Exercise Name</th>
+          <th>Type</th>
+          <th>Duration</th>
+          <th>Calories Burned</th>
+          <th>Workout Date</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="page-workouts-tbody">
+        <!-- Dynamically populated by workout.js -->
+        <tr>
+          <td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+            Loading workout history...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.loadWorkoutsPage === 'function') {
+      window.loadWorkoutsPage();
+    }
+  });
+</script>
+{% endblock %}

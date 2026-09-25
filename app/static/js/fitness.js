@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Daily fitness metrics logging (Weight, Water, Calories)
  */
 function openFitnessModal() {
@@ -50,6 +50,9 @@ async function handleFitnessSubmit(e) {
 
     Toast.success('Daily metrics saved successfully!');
     closeFitnessModal();
+    if (typeof window.loadProgressPage === 'function') {
+      window.loadProgressPage();
+    }
     if (window.dashboard && window.dashboard.refresh) {
       window.dashboard.refresh();
     }

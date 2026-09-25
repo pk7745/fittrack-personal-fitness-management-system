@@ -1,0 +1,85 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Data Reports & Exports | FitTrack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-text">
+    <h1>Data Reports & Exports 📄</h1>
+    <p>Generate and export your verified fitness records, workout history, and goals in standard CSV or PDF.</p>
+  </div>
+</div>
+
+<div class="reports-layout-grid">
+  <!-- 1. Fitness Health Report -->
+  <div class="report-export-box">
+    <div class="report-export-header">
+      <div class="report-export-icon">💧</div>
+      <div class="report-export-title">Daily Fitness & Health Report</div>
+      <div class="report-export-desc">
+        Complete historical log of daily weight measurements, water intake, caloric consumption, BMI scores, and health categories.
+      </div>
+    </div>
+    <div class="report-export-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportReport('fitness')">
+        📥 Download CSV
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="exportReport('pdf')">
+        📄 Download PDF Report
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. Workouts Report -->
+  <div class="report-export-box">
+    <div class="report-export-header">
+      <div class="report-export-icon">🏋️</div>
+      <div class="report-export-title">Workout History Report</div>
+      <div class="report-export-desc">
+        Detailed breakdown of all logged training sessions including exercise names, activity types, duration, and calories burned.
+      </div>
+    </div>
+    <div class="report-export-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportReport('workouts')">
+        📥 Download CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Goals Report -->
+  <div class="report-export-box">
+    <div class="report-export-header">
+      <div class="report-export-icon">🎯</div>
+      <div class="report-export-title">Fitness Goals Report</div>
+      <div class="report-export-desc">
+        Full tracking log of personal fitness targets, starting baseline values, current progress rates, and deadline statuses.
+      </div>
+    </div>
+    <div class="report-export-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportReport('goals')">
+        📥 Download CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Aggregated Summary Report -->
+  <div class="report-export-box">
+    <div class="report-export-header">
+      <div class="report-export-icon">📊</div>
+      <div class="report-export-title">Executive Fitness Summary</div>
+      <div class="report-export-desc">
+        High-level consolidated snapshot including user biometric profile, current BMI category, and cumulative workout aggregates.
+      </div>
+    </div>
+    <div class="report-export-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportReport('summary')">
+        📥 Download CSV
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}

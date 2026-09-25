@@ -1,4 +1,4 @@
-﻿import re
+import re
 from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for
 from app.models import db, User
 from app.routes import login_required, get_current_user
@@ -14,14 +14,14 @@ EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 @auth_bp.route('/login', methods=['GET'])
 def login_view():
     if session.get('user_id'):
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.dashboard_view'))
     return render_template('login.html')
 
 
 @auth_bp.route('/register', methods=['GET'])
 def register_view():
     if session.get('user_id'):
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.dashboard_view'))
     return render_template('register.html')
 
 
