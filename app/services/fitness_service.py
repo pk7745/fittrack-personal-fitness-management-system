@@ -46,42 +46,107 @@ def get_bmi_category(bmi):
         return "Obese"
 
 
-def calculate_goal_progress(goal_type, target_value, current_value):
+def calculate_goal_progress(goal_type, target_value, current_value, start_value=None, deadline=None):
     """
-    Calculate progress percentage and completion status for a goal.
+    Calculate progress percentage, lifecycle status, and deadline info for a goal.
     Handles potential division by zero, negative values, and clamps output to 0-100%.
+
+    If start_value is provided:
+      - Weight Loss: (start - current) / (start - target) * 100
+      - Other: (current - start) / (target - start) * 100
+    If start_value is not provided (v1.0 compatibility):
+      - Weight Loss: (target / current) * 100
+      - Other: (current / target) * 100
     """
     try:
         target = float(target_value)
         current = float(current_value) if current_value is not None else 0.0
+        start = float(start_value) if start_value is not None else None
     except (ValueError, TypeError):
-        return {"percentage": 0.0, "is_completed": False}
+        return {
+            "percentage": 0.0,
+            "is_completed": False,
+            "status": "Active",
+            "remaining_days": None,
+            "deadline": None,
+            "start_value": None
+        }
 
-    if target <= 0:
-        return {"percentage": 0.0, "is_completed": False}
+    # Deadline parsing
+    deadline_date = None
+    if deadline:
+        try:
+            if isinstance(deadline, str):
+                deadline_date = datetime.strptime(deadline, '%Y-%m-%d').date()
+            elif isinstance(deadline, (date, datetime)):
+                deadline_date = deadline if isinstance(deadline, date) else deadline.date()
+        except ValueError:
+            deadline_date = None
 
-    if current < 0:
-        return {"percentage": 0.0, "is_completed": False}
+    if target <= 0 or current < 0:
+        return {
+            "percentage": 0.0,
+            "is_completed": False,
+            "status": "Active",
+            "remaining_days": None,
+            "deadline": deadline_date.isoformat() if deadline_date else None,
+            "start_value": start
+        }
 
-    if goal_type and "loss" in goal_type.lower():
-        # For weight loss:
-        # If current <= target (and current > 0), goal is achieved (100%)
-        # If current > target, progress towards target is (target / current) * 100
-        if current <= target:
-            pct = 100.0
+    is_weight_loss = bool(goal_type and "loss" in goal_type.lower())
+
+    if start is not None and start != target:
+        if is_weight_loss:
+            if current <= target:
+                pct = 100.0
+            elif current >= start:
+                pct = 0.0
+            else:
+                pct = round(max(0.0, min(100.0, (start - current) / (start - target) * 100)), 1)
         else:
-            pct = max(0.0, min(100.0, round((target / current) * 100, 1))) if current > 0 else 0.0
+            if current >= target:
+                pct = 100.0
+            elif current <= start:
+                pct = 0.0
+            else:
+                pct = round(max(0.0, min(100.0, (current - start) / (target - start) * 100)), 1)
     else:
-        # Standard progress (Weight Gain, Muscle Building, General Fitness, Endurance):
-        if current >= target:
-            pct = 100.0
+        # Fallback to ratio when start_value is not provided
+        if is_weight_loss:
+            if current <= target:
+                pct = 100.0
+            else:
+                pct = max(0.0, min(100.0, round((target / current) * 100, 1))) if current > 0 else 0.0
         else:
-            pct = max(0.0, min(100.0, round((current / target) * 100, 1)))
+            if current >= target:
+                pct = 100.0
+            else:
+                pct = max(0.0, min(100.0, round((current / target) * 100, 1)))
 
     is_completed = pct >= 100.0
+
+    # Determine status & remaining days
+    today = date.today()
+    remaining_days = None
+    status = "Active"
+
+    if deadline_date:
+        remaining_days = (deadline_date - today).days
+
+    if is_completed:
+        status = "Completed"
+    elif deadline_date and deadline_date < today:
+        status = "Overdue"
+    else:
+        status = "Active"
+
     return {
         "percentage": pct,
-        "is_completed": is_completed
+        "is_completed": is_completed,
+        "status": status,
+        "remaining_days": remaining_days,
+        "deadline": deadline_date.isoformat() if deadline_date else None,
+        "start_value": start
     }
 
 
@@ -193,7 +258,6 @@ def get_daily_fitness_summary(user_id, target_date=None):
 
     today_record = FitnessRecord.query.filter_by(user_id=user_id, record_date=target_date).first()
 
-    # Weight resolution: today's record -> latest recorded weight -> user profile weight
     current_weight = None
     if today_record and today_record.weight is not None:
         current_weight = today_record.weight

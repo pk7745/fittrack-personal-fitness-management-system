@@ -1,4 +1,5 @@
-﻿from flask import Blueprint, request, jsonify
+﻿from datetime import datetime
+from flask import Blueprint, request, jsonify
 from app.models import db, Goal
 from app.routes import login_required, get_current_user
 from app.services.fitness_service import calculate_goal_progress
@@ -22,10 +23,18 @@ def api_get_goals():
 
     result = []
     for g in goals:
-        progress = calculate_goal_progress(g.goal_type, g.target_value, g.current_value)
+        progress = calculate_goal_progress(
+            g.goal_type,
+            g.target_value,
+            g.current_value,
+            start_value=g.start_value,
+            deadline=g.deadline
+        )
         data = g.to_dict()
         data['progress_percentage'] = progress['percentage']
         data['is_completed'] = progress['is_completed']
+        data['status'] = progress['status']
+        data['remaining_days'] = progress['remaining_days']
         result.append(data)
 
     return jsonify({
@@ -45,10 +54,18 @@ def api_get_goal(goal_id):
             return jsonify({'success': False, 'message': 'Unauthorized access to goal'}), 403
         return jsonify({'success': False, 'message': 'Goal not found'}), 404
 
-    progress = calculate_goal_progress(goal.goal_type, goal.target_value, goal.current_value)
+    progress = calculate_goal_progress(
+        goal.goal_type,
+        goal.target_value,
+        goal.current_value,
+        start_value=goal.start_value,
+        deadline=goal.deadline
+    )
     resp = goal.to_dict()
     resp['progress_percentage'] = progress['percentage']
     resp['is_completed'] = progress['is_completed']
+    resp['status'] = progress['status']
+    resp['remaining_days'] = progress['remaining_days']
 
     return jsonify({
         'success': True,
@@ -87,11 +104,34 @@ def api_create_goal():
     except (ValueError, TypeError):
         return jsonify({'success': False, 'message': 'Current value must be a valid number'}), 400
 
+    # Optional start_value (baseline)
+    start_val = data.get('start_value')
+    if start_val is not None and start_val != "":
+        try:
+            start_val = float(start_val)
+            if start_val <= 0:
+                return jsonify({'success': False, 'message': 'Start value must be greater than 0'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'message': 'Start value must be a valid number'}), 400
+    else:
+        start_val = None
+
+    # Optional deadline
+    deadline_str = data.get('deadline')
+    deadline_date = None
+    if deadline_str:
+        try:
+            deadline_date = datetime.strptime(deadline_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid deadline format. Use YYYY-MM-DD'}), 400
+
     goal = Goal(
         user_id=user.id,
         goal_type=goal_type,
         target_value=target_val,
-        current_value=curr_val
+        current_value=curr_val,
+        start_value=start_val,
+        deadline=deadline_date
     )
 
     try:
@@ -101,10 +141,18 @@ def api_create_goal():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
 
-    progress = calculate_goal_progress(goal.goal_type, goal.target_value, goal.current_value)
+    progress = calculate_goal_progress(
+        goal.goal_type,
+        goal.target_value,
+        goal.current_value,
+        start_value=goal.start_value,
+        deadline=goal.deadline
+    )
     resp = goal.to_dict()
     resp['progress_percentage'] = progress['percentage']
     resp['is_completed'] = progress['is_completed']
+    resp['status'] = progress['status']
+    resp['remaining_days'] = progress['remaining_days']
 
     return jsonify({
         'success': True,
@@ -149,16 +197,47 @@ def api_update_goal(goal_id):
         except (ValueError, TypeError):
             return jsonify({'success': False, 'message': 'Current value must be a valid number'}), 400
 
+    if 'start_value' in data:
+        s_val = data.get('start_value')
+        if s_val is not None and s_val != "":
+            try:
+                s_num = float(s_val)
+                if s_num <= 0:
+                    return jsonify({'success': False, 'message': 'Start value must be greater than 0'}), 400
+                goal.start_value = s_num
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'message': 'Start value must be a valid number'}), 400
+        else:
+            goal.start_value = None
+
+    if 'deadline' in data:
+        d_val = data.get('deadline')
+        if d_val:
+            try:
+                goal.deadline = datetime.strptime(d_val, '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Invalid deadline format. Use YYYY-MM-DD'}), 400
+        else:
+            goal.deadline = None
+
     try:
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
 
-    progress = calculate_goal_progress(goal.goal_type, goal.target_value, goal.current_value)
+    progress = calculate_goal_progress(
+        goal.goal_type,
+        goal.target_value,
+        goal.current_value,
+        start_value=goal.start_value,
+        deadline=goal.deadline
+    )
     resp = goal.to_dict()
     resp['progress_percentage'] = progress['percentage']
     resp['is_completed'] = progress['is_completed']
+    resp['status'] = progress['status']
+    resp['remaining_days'] = progress['remaining_days']
 
     return jsonify({
         'success': True,

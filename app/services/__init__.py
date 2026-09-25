@@ -14,6 +14,20 @@ from app.services.workout_service import (
     get_workout_stats,
     get_recent_workouts
 )
+from app.services.analytics_service import get_user_analytics_summary
+from app.services.reminders_service import (
+    get_or_create_reminder_preferences,
+    update_reminder_preferences,
+    get_active_reminders
+)
+from app.services.report_service import (
+    generate_fitness_csv,
+    generate_workouts_csv,
+    generate_goals_csv,
+    generate_summary_csv,
+    generate_fitness_pdf
+)
+from app.services.calendar_service import get_month_calendar_events
 
 __all__ = [
     'calculate_bmi',
@@ -27,5 +41,15 @@ __all__ = [
     'get_workout_by_id',
     'delete_workout',
     'get_workout_stats',
-    'get_recent_workouts'
+    'get_recent_workouts',
+    'get_user_analytics_summary',
+    'get_or_create_reminder_preferences',
+    'update_reminder_preferences',
+    'get_active_reminders',
+    'generate_fitness_csv',
+    'generate_workouts_csv',
+    'generate_goals_csv',
+    'generate_summary_csv',
+    'generate_fitness_pdf',
+    'get_month_calendar_events'
 ]

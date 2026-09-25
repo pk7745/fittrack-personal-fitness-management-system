@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="FitTrack - Personal Fitness Management System MVP">
+  <meta name="description" content="FitTrack v1.1 - Personal Fitness Management & Real-Time Productivity System">
   <title>{% block title %}FitTrack | Personal Fitness Management{% endblock %}</title>
   
   <!-- CSS Stylesheet -->
@@ -18,15 +18,17 @@
     <div class="nav-container">
       <a href="{{ url_for('dashboard.index') }}" class="nav-brand">
         <div class="brand-icon">⚡</div>
-        <span>FitTrack</span>
+        <span>FitTrack <span style="font-size:0.65rem; background:rgba(16,185,129,0.2); color:var(--primary); padding:2px 6px; border-radius:4px; vertical-align:middle;">v1.1</span></span>
       </a>
 
       {% if session.get('user_id') %}
       <nav>
         <ul class="nav-links">
           <li><a href="{{ url_for('dashboard.index') }}" class="nav-link active">Dashboard</a></li>
-          <li><a href="#workouts-section" class="nav-link">Workouts</a></li>
-          <li><a href="#progress-section" class="nav-link">Progress</a></li>
+          <li><a href="#analytics-section" class="nav-link">Analytics</a></li>
+          <li><a href="#calendar-section" class="nav-link">Calendar</a></li>
+          <li><a href="#reports-section" class="nav-link">Reports</a></li>
+          <li><span class="nav-link" onclick="openRemindersModal()">🔔 Reminders</span></li>
           <li><span class="nav-link" onclick="openProfileModal()">Profile</span></li>
           <li>
             <div class="user-badge" onclick="openProfileModal()" style="cursor:pointer;" title="Edit Profile">
@@ -57,7 +59,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System &bull; Production-Quality MVP</p>
+    <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System v1.1 &bull; Real-Time & Productivity</p>
   </footer>
 
   <!-- Toast Notification Container -->
@@ -71,6 +73,10 @@
   <script src="{{ url_for('static', filename='js/fitness.js') }}"></script>
   <script src="{{ url_for('static', filename='js/goal.js') }}"></script>
   <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/reminders.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

@@ -20,6 +20,7 @@ class User(db.Model):
     workouts = db.relationship('Workout', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     fitness_records = db.relationship('FitnessRecord', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     goals = db.relationship('Goal', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    reminder_preference = db.relationship('ReminderPreference', backref='user', uselist=False, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

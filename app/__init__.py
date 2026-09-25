@@ -1,6 +1,6 @@
 ﻿import os
 from flask import Flask, jsonify, render_template, request
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.engine import Engine
 from config import config
 from app.models import db
@@ -39,6 +39,10 @@ def create_app(config_name='default'):
     from app.routes.fitness import fitness_bp
     from app.routes.profile import profile_bp
     from app.routes.goal import goal_bp
+    from app.routes.analytics import analytics_bp
+    from app.routes.reminder import reminder_bp
+    from app.routes.report import report_bp
+    from app.routes.calendar import calendar_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -46,6 +50,10 @@ def create_app(config_name='default'):
     app.register_blueprint(fitness_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(goal_bp)
+    app.register_blueprint(analytics_bp)
+    app.register_blueprint(reminder_bp)
+    app.register_blueprint(report_bp)
+    app.register_blueprint(calendar_bp)
 
     # Global Error Handlers (returning JSON for API, HTML for web)
     @app.errorhandler(400)
@@ -84,8 +92,22 @@ def create_app(config_name='default'):
             return jsonify({'success': False, 'message': 'Internal server error'}), 500
         return render_template('base.html', error_title="500 - Server Error", error_msg="An unexpected error occurred."), 500
 
-    # Initialize database tables
+    # Initialize database tables and run safe incremental migrations
     with app.app_context():
         db.create_all()
+
+        # Safe schema migration for SQLite (v1.0 -> v1.1)
+        try:
+            with db.engine.connect() as conn:
+                res = conn.execute(text("PRAGMA table_info(goals);"))
+                columns = [row[1] for row in res.fetchall()]
+                if 'start_value' not in columns:
+                    conn.execute(text("ALTER TABLE goals ADD COLUMN start_value FLOAT;"))
+                    conn.commit()
+                if 'deadline' not in columns:
+                    conn.execute(text("ALTER TABLE goals ADD COLUMN deadline DATE;"))
+                    conn.commit()
+        except Exception:
+            pass
 
     return app

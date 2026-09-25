@@ -2,7 +2,7 @@
 import sys
 from datetime import date, timedelta
 from app import create_app
-from app.models import db, User, Workout, FitnessRecord, Goal
+from app.models import db, User, Workout, FitnessRecord, Goal, ReminderPreference
 
 app = create_app(os.environ.get('FLASK_CONFIG', 'development'))
 
@@ -71,23 +71,36 @@ def seed_demo_data():
             )
             db.session.add(w)
 
-        # Add sample goals
+        # Add sample goals with v1.1 start_value and deadline
         goals_data = [
-            ("Weight Loss", 65.0, 68.5),
-            ("Strength", 500.0, 350.0),
-            ("Endurance", 30.0, 18.0)
+            ("Weight Loss", 65.0, 68.5, 72.0, today + timedelta(days=14)),
+            ("Muscle Building", 500.0, 350.0, 100.0, today + timedelta(days=30)),
+            ("Endurance", 30.0, 18.0, 0.0, today + timedelta(days=2))
         ]
-        for g_type, target, current in goals_data:
+        for g_type, target, current, start_val, dline in goals_data:
             g = Goal(
                 user_id=demo_user.id,
                 goal_type=g_type,
                 target_value=target,
-                current_value=current
+                current_value=current,
+                start_value=start_val,
+                deadline=dline
             )
             db.session.add(g)
 
+        # Add default reminder preferences
+        pref = ReminderPreference(
+            user_id=demo_user.id,
+            workout_reminder=True,
+            daily_fitness_reminder=True,
+            goal_deadline_reminder=True,
+            hydration_reminder=True,
+            hydration_target=2.5
+        )
+        db.session.add(pref)
+
         db.session.commit()
-        print("Demo data seeded successfully!")
+        print("Demo data seeded successfully for FitTrack v1.1!")
         print("Credentials -> Email: demo@fittrack.com | Password: Password123!")
 
 
@@ -95,5 +108,5 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'seed-demo':
         seed_demo_data()
     else:
-        print("Starting FitTrack on http://127.0.0.1:5000 ...")
+        print("Starting FitTrack v1.1 on http://127.0.0.1:5000 ...")
         app.run(host='127.0.0.1', port=5000, debug=True)

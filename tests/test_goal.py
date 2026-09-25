@@ -65,3 +65,37 @@ def test_unauthorized_goal_access(client):
 
     # User 2 attempts to delete User 1's goal -> 403
     assert client.delete(f'/api/goals/{g_id}').status_code == 403
+
+def test_goal_with_start_value_and_deadline(auth_client):
+    from datetime import date, timedelta
+    today = date.today()
+    deadline_date = (today + timedelta(days=10)).isoformat()
+
+    # Weight Loss: Start = 80 kg, Target = 70 kg, Current = 75 kg
+    # Progress: (80 - 75) / (80 - 70) * 100 = 50.0%
+    res = auth_client.post('/api/goals', json={
+        'goal_type': 'Weight Loss',
+        'start_value': 80.0,
+        'target_value': 70.0,
+        'current_value': 75.0,
+        'deadline': deadline_date
+    })
+    assert res.status_code == 201
+    goal = res.get_json()['goal']
+    assert goal['start_value'] == 80.0
+    assert goal['progress_percentage'] == 50.0
+    assert goal['status'] == 'Active'
+    assert goal['remaining_days'] == 10
+
+    # Test Overdue status with past deadline
+    past_deadline = (today - timedelta(days=5)).isoformat()
+    res2 = auth_client.post('/api/goals', json={
+        'goal_type': 'General Fitness',
+        'target_value': 100.0,
+        'current_value': 20.0,
+        'deadline': past_deadline
+    })
+    assert res2.status_code == 201
+    goal2 = res2.get_json()['goal']
+    assert goal2['status'] == 'Overdue'
+    assert goal2['remaining_days'] == -5

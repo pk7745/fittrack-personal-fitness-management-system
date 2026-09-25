@@ -1,5 +1,5 @@
 ﻿/**
- * Main FitTrack Dashboard controller & Chart.js integration
+ * FitTrack v1.1 - Main Dashboard controller & Real-time update engine
  */
 let weightChartInstance = null;
 let activityChartInstance = null;
@@ -22,14 +22,84 @@ function getBmiBadgeClass(category) {
   return 'badge-normal';
 }
 
-async function loadDashboardData() {
+function getGoalStatusBadgeClass(status) {
+  switch (status) {
+    case 'Completed': return 'badge-normal';
+    case 'Overdue': return 'badge-obese';
+    default: return 'badge-underweight';
+  }
+}
+
+// -------------------------------------------------------------
+// Real-Time Modular Refresh Handlers
+// -------------------------------------------------------------
+async function refreshStats() {
+  try {
+    const data = await apiRequest('/api/dashboard');
+    if (!data.success) return;
+    updateStatsDOM(data);
+  } catch (err) {
+    console.error('Error refreshing stats:', err);
+  }
+}
+
+async function refreshWorkouts() {
+  try {
+    const data = await apiRequest('/api/workouts');
+    if (!data.success) return;
+    renderRecentWorkouts(data.workouts.slice(0, 5));
+  } catch (err) {
+    console.error('Error refreshing workouts:', err);
+  }
+}
+
+async function refreshGoals() {
+  try {
+    const data = await apiRequest('/api/goals');
+    if (!data.success) return;
+    renderGoals(data.goals);
+  } catch (err) {
+    console.error('Error refreshing goals:', err);
+  }
+}
+
+async function refreshCharts() {
+  try {
+    const data = await apiRequest('/api/dashboard');
+    if (!data.success) return;
+    renderWeightChart(data.charts.weight_history);
+    renderActivityChart(data.charts.workout_activity);
+  } catch (err) {
+    console.error('Error refreshing charts:', err);
+  }
+}
+
+async function refreshAnalytics() {
+  if (typeof window.loadAnalytics === 'function') {
+    await window.loadAnalytics();
+  }
+}
+
+async function refreshReminders() {
+  if (typeof window.loadReminders === 'function') {
+    await window.loadReminders();
+  }
+}
+
+async function refreshCalendar() {
+  if (typeof window.loadCalendar === 'function') {
+    await window.loadCalendar();
+  }
+}
+
+async function refreshDashboard() {
   try {
     const data = await apiRequest('/api/dashboard');
     if (!data.success) return;
 
     const { user, fitness, workouts, recent_workouts, goals, charts } = data;
 
-    // 1. Update Greeting & User elements
+    // User greeting & Avatar
     const greetingEl = document.getElementById('user-greeting');
     if (greetingEl) greetingEl.innerText = getGreeting(user.name);
 
@@ -41,50 +111,63 @@ async function loadDashboardData() {
       navAvatarEl.innerText = user.name.charAt(0).toUpperCase();
     }
 
-    // 2. Update Stat Cards
-    // BMI Card
-    const bmiValEl = document.getElementById('stat-bmi-value');
-    const bmiBadgeEl = document.getElementById('stat-bmi-badge');
-    if (bmiValEl) bmiValEl.innerText = fitness.bmi !== null ? fitness.bmi : '--';
-    if (bmiBadgeEl) {
-      bmiBadgeEl.className = `badge ${getBmiBadgeClass(fitness.bmi_category)}`;
-      bmiBadgeEl.innerText = fitness.bmi_category || 'No Data';
-    }
+    // Top Stat Cards
+    updateStatsDOM(data);
 
-    // Weight Card
-    const weightValEl = document.getElementById('stat-weight-value');
-    if (weightValEl) weightValEl.innerText = fitness.weight !== null ? fitness.weight : '--';
-
-    // Water Card
-    const waterValEl = document.getElementById('stat-water-value');
-    if (waterValEl) waterValEl.innerText = fitness.water !== null ? fitness.water : '0.0';
-
-    // Calories Card
-    const caloriesValEl = document.getElementById('stat-calories-value');
-    if (caloriesValEl) {
-      caloriesValEl.innerText = fitness.calories !== null ? fitness.calories.toLocaleString() : '0';
-    }
-
-    // Workouts Card
-    const workoutTodayEl = document.getElementById('stat-workouts-today');
-    const workoutWeeklyEl = document.getElementById('stat-workouts-weekly');
-    if (workoutTodayEl) workoutTodayEl.innerText = workouts.today;
-    if (workoutWeeklyEl) workoutWeeklyEl.innerText = `${workouts.weekly} this week`;
-
-    // 3. Render Recent Workouts
+    // Recent Workouts Table
     renderRecentWorkouts(recent_workouts);
 
-    // 4. Render Goals
+    // Goals List
     renderGoals(goals);
 
-    // 5. Render Charts
+    // Charts
     renderWeightChart(charts.weight_history);
     renderActivityChart(charts.workout_activity);
 
+    // Parallel Refresh of v1.1 Enhancements
+    await Promise.allSettled([
+      refreshAnalytics(),
+      refreshReminders(),
+      refreshCalendar()
+    ]);
+
   } catch (err) {
-    console.error('Error loading dashboard data:', err);
+    console.error('Error refreshing dashboard:', err);
     Toast.error('Could not refresh dashboard data');
   }
+}
+
+function updateStatsDOM(data) {
+  const { fitness, workouts } = data;
+
+  // BMI Card
+  const bmiValEl = document.getElementById('stat-bmi-value');
+  const bmiBadgeEl = document.getElementById('stat-bmi-badge');
+  if (bmiValEl) bmiValEl.innerText = fitness.bmi !== null ? fitness.bmi : '--';
+  if (bmiBadgeEl) {
+    bmiBadgeEl.className = `badge ${getBmiBadgeClass(fitness.bmi_category)}`;
+    bmiBadgeEl.innerText = fitness.bmi_category || 'No Data';
+  }
+
+  // Weight Card
+  const weightValEl = document.getElementById('stat-weight-value');
+  if (weightValEl) weightValEl.innerText = fitness.weight !== null ? fitness.weight : '--';
+
+  // Water Card
+  const waterValEl = document.getElementById('stat-water-value');
+  if (waterValEl) waterValEl.innerText = fitness.water !== null ? fitness.water : '0.0';
+
+  // Calories Card
+  const caloriesValEl = document.getElementById('stat-calories-value');
+  if (caloriesValEl) {
+    caloriesValEl.innerText = fitness.calories !== null ? fitness.calories.toLocaleString() : '0';
+  }
+
+  // Workouts Card
+  const workoutTodayEl = document.getElementById('stat-workouts-today');
+  const workoutWeeklyEl = document.getElementById('stat-workouts-weekly');
+  if (workoutTodayEl) workoutTodayEl.innerText = workouts.today;
+  if (workoutWeeklyEl) workoutWeeklyEl.innerText = `${workouts.weekly} this week`;
 }
 
 function renderRecentWorkouts(workouts) {
@@ -140,14 +223,33 @@ function renderGoals(goals) {
   container.innerHTML = goals.map(g => {
     const isDone = g.is_completed;
     const pct = Math.min(100, Math.max(0, g.progress_percentage || 0));
+    const status = g.status || (isDone ? 'Completed' : 'Active');
+
+    let deadlineInfo = 'No deadline';
+    if (g.deadline) {
+      if (g.remaining_days !== null && g.remaining_days !== undefined) {
+        if (g.remaining_days < 0) {
+          deadlineInfo = `<span style="color:var(--danger);">${Math.abs(g.remaining_days)}d overdue</span>`;
+        } else if (g.remaining_days === 0) {
+          deadlineInfo = `<span style="color:var(--accent-amber);">Due today!</span>`;
+        } else {
+          deadlineInfo = `${g.remaining_days}d remaining`;
+        }
+      } else {
+        deadlineInfo = g.deadline;
+      }
+    }
 
     return `
       <div class="goal-item">
         <div class="goal-header">
-          <div class="goal-title">${escapeHtml(g.goal_type)}</div>
+          <div>
+            <span class="goal-title">${escapeHtml(g.goal_type)}</span>
+            <span class="badge ${getGoalStatusBadgeClass(status)}" style="margin-left: 0.5rem;">${status}</span>
+          </div>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <span class="badge ${isDone ? 'badge-normal' : 'badge-type'}">
-              ${isDone ? 'Completed 🎉' : `${pct.toFixed(0)}%`}
+              ${pct.toFixed(0)}%
             </span>
             <button class="btn-icon" onclick="deleteGoal(${g.id})" title="Remove goal" aria-label="Remove goal">
               &times;
@@ -157,9 +259,9 @@ function renderGoals(goals) {
         <div class="progress-container">
           <div class="progress-bar ${isDone ? 'completed' : ''}" style="width: ${pct}%;"></div>
         </div>
-        <div class="goal-meta" style="display:flex;justify-content:space-between;">
-          <span>Current: <strong>${g.current_value}</strong></span>
-          <span>Target: <strong>${g.target_value}</strong></span>
+        <div class="goal-meta" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Current: <strong>${g.current_value}</strong> / Target: <strong>${g.target_value}</strong></span>
+          <span>📅 ${deadlineInfo}</span>
         </div>
       </div>
     `;
@@ -323,12 +425,18 @@ function escapeHtml(str) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Only auto-load if on dashboard
   if (document.getElementById('workouts-table-body')) {
-    loadDashboardData();
+    refreshDashboard();
   }
 });
 
 window.dashboard = {
-  refresh: loadDashboardData
+  refresh: refreshDashboard,
+  refreshStats: refreshStats,
+  refreshWorkouts: refreshWorkouts,
+  refreshGoals: refreshGoals,
+  refreshCharts: refreshCharts,
+  refreshAnalytics: refreshAnalytics,
+  refreshReminders: refreshReminders,
+  refreshCalendar: refreshCalendar
 };

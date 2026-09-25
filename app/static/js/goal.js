@@ -1,5 +1,5 @@
 ﻿/**
- * Fitness Goals management
+ * Fitness Goals management (FitTrack v1.1)
  */
 function openGoalModal() {
   const modal = document.getElementById('goal-modal');
@@ -23,6 +23,8 @@ async function handleGoalSubmit(e) {
   const goalType = document.getElementById('goal_type').value;
   const targetVal = parseFloat(document.getElementById('target_value').value);
   const currentVal = parseFloat(document.getElementById('current_value').value || 0);
+  const startVal = document.getElementById('start_value').value;
+  const deadlineVal = document.getElementById('goal_deadline').value;
 
   if (!goalType) {
     Toast.error('Please select a goal type');
@@ -33,17 +35,26 @@ async function handleGoalSubmit(e) {
     return;
   }
 
+  const payload = {
+    goal_type: goalType,
+    target_value: targetVal,
+    current_value: currentVal
+  };
+
+  if (startVal !== "") {
+    payload.start_value = parseFloat(startVal);
+  }
+  if (deadlineVal) {
+    payload.deadline = deadlineVal;
+  }
+
   submitBtn.disabled = true;
   submitBtn.innerText = 'Saving...';
 
   try {
     await apiRequest('/api/goals', {
       method: 'POST',
-      body: JSON.stringify({
-        goal_type: goalType,
-        target_value: targetVal,
-        current_value: currentVal
-      })
+      body: JSON.stringify(payload)
     });
 
     Toast.success('Goal created successfully!');
