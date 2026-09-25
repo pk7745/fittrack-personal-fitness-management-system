@@ -1,0 +1,42 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Sign In | FitTrack{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">⚡</div>
+      <h2>Welcome Back</h2>
+      <p>Log in to access your fitness metrics and workouts</p>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input type="email" id="email" class="form-input" placeholder="name@example.com" required autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" id="password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+        Sign In
+      </button>
+    </form>
+
+    <div class="demo-credentials-box">
+      <strong>Demo Account Available:</strong><br>
+      Email: <code>demo@fittrack.com</code><br>
+      Password: <code>Password123!</code>
+    </div>
+
+    <div class="auth-footer">
+      Don't have an account yet? 
+      <a href="{{ url_for('auth.register_view') }}">Create Account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FitTrack - Personal Fitness Management System MVP">
+  <title>{% block title %}FitTrack | Personal Fitness Management{% endblock %}</title>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('dashboard.index') }}" class="nav-brand">
+        <div class="brand-icon">⚡</div>
+        <span>FitTrack</span>
+      </a>
+
+      {% if session.get('user_id') %}
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('dashboard.index') }}" class="nav-link active">Dashboard</a></li>
+          <li><a href="#workouts-section" class="nav-link">Workouts</a></li>
+          <li><a href="#progress-section" class="nav-link">Progress</a></li>
+          <li><span class="nav-link" onclick="openProfileModal()">Profile</span></li>
+          <li>
+            <div class="user-badge" onclick="openProfileModal()" style="cursor:pointer;" title="Edit Profile">
+              <span class="avatar-circle" id="nav-user-avatar">
+                {{ user.name[0].upper() if user and user.name else 'U' }}
+              </span>
+              <span id="nav-user-name">{{ user.name if user else 'User' }}</span>
+            </div>
+          </li>
+          <li><a href="javascript:void(0)" onclick="handleLogout()" class="nav-link" style="color:var(--danger);">Logout</a></li>
+        </ul>
+      </nav>
+      {% else %}
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('auth.login_view') }}" class="nav-link">Sign In</a></li>
+          <li><a href="{{ url_for('auth.register_view') }}" class="btn btn-primary btn-sm">Get Started</a></li>
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Main Content Block -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System &bull; Production-Quality MVP</p>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Vanilla JavaScript Modules -->
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/workout.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/fitness.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/goal.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
