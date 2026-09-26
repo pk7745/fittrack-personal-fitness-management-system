@@ -109,6 +109,22 @@ def seed_demo_data():
         print("Credentials -> Email: demo@fittrack.com | Password: Password123!")
 
 
+def ensure_demo_user():
+    """Ensure demo user exists on startup so credentials work immediately."""
+    with app.app_context():
+        try:
+            demo_user = User.query.filter_by(email='demo@fittrack.com').first()
+            if not demo_user:
+                print("Seeding initial demo user for deployment...")
+                seed_demo_data()
+        except Exception as e:
+            print(f"Notice: Auto-seed skipped ({e})")
+
+
+# Automatically ensure demo user exists
+ensure_demo_user()
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'seed-demo':
         seed_demo_data()
