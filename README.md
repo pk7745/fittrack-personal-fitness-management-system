@@ -1,4 +1,4 @@
-﻿# FitTrack — Personal Fitness Management System
+# FitTrack — Personal Fitness Management System
 
 A production-grade, full-stack personal fitness tracking web application built with Python, Flask, SQLAlchemy, SQLite, HTML5, modern CSS3, and Vanilla JavaScript.
 
@@ -167,6 +167,25 @@ python run.py
 ```
 
 The application will start at `http://127.0.0.1:5000/`.
+
+---
+
+## Deployment (Render Web Service)
+
+FitTrack is pre-configured for deployment on **Render Free Web Service**.
+
+### Configuration Settings
+- **Build Command**: pip install -r requirements.txt
+- **Start Command**: gunicorn --bind 0.0.0.0: run:app
+- **Environment Variables**:
+  - FLASK_CONFIG: production (enforces DEBUG = False)
+  - SECRET_KEY: *(Set to a secure, random 64-character secret)*
+  - PYTHON_VERSION: 3.11.9
+
+### SQLite Free Tier Limitation
+The initial deployment uses SQLite (instance/fittrack.db), which automatically initializes upon startup. Please note that Render's free tier uses an ephemeral filesystem: data will persist across regular user sessions while the service is active, but resets if the free container spins down or is redeployed. For permanent data persistence across restarts and redeployments, connect a persistent PostgreSQL database via the DATABASE_URL environment variable.
+
+For step-by-step instructions, refer to [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md).
 
 ---
 

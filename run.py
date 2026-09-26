@@ -1,10 +1,15 @@
-﻿import os
+import os
 import sys
 from datetime import date, timedelta
 from app import create_app
 from app.models import db, User, Workout, FitnessRecord, Goal, ReminderPreference
 
-app = create_app(os.environ.get('FLASK_CONFIG', 'development'))
+# Determine environment: honor FLASK_CONFIG, FLASK_ENV, or auto-detect Render
+env_name = os.environ.get('FLASK_CONFIG') or os.environ.get('FLASK_ENV')
+if not env_name:
+    env_name = 'production' if os.environ.get('RENDER') else 'development'
+
+app = create_app(env_name)
 
 
 def seed_demo_data():
@@ -108,5 +113,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'seed-demo':
         seed_demo_data()
     else:
-        print("Starting FitTrack v1.1 on http://127.0.0.1:5000 ...")
-        app.run(host='127.0.0.1', port=5000, debug=True)
+        port = int(os.environ.get('PORT', 5000))
+        host = os.environ.get('HOST', '0.0.0.0' if os.environ.get('RENDER') else '127.0.0.1')
+        debug = (env_name == 'development')
+        print(f"Starting FitTrack v1.1 on http://{host}:{port} (debug={debug}) ...")
+        app.run(host=host, port=port, debug=debug)

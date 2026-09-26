@@ -1,11 +1,11 @@
-﻿import os
+import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
     """Base configuration."""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'fittrack-super-secret-key-2026-prod'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'fittrack-dev-fallback-key'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
@@ -29,7 +29,12 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    # Support postgres:// -> postgresql:// URL rewrite if Render PostgreSQL is ever attached
+    _db_url = os.environ.get('DATABASE_URL')
+    if _db_url and _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+
+    SQLALCHEMY_DATABASE_URI = _db_url or \
         'sqlite:///' + os.path.join(basedir, 'instance', 'fittrack.db')
 
 

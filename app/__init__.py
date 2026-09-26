@@ -1,4 +1,4 @@
-﻿import os
+import os
 from flask import Flask, jsonify, render_template, request
 from sqlalchemy import event, text
 from sqlalchemy.engine import Engine
@@ -94,6 +94,17 @@ def create_app(config_name='default'):
 
     # Initialize database tables and run safe incremental migrations
     with app.app_context():
+        # Ensure SQLite target directory exists if using SQLite file
+        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if db_uri.startswith('sqlite:///') and not db_uri.startswith('sqlite:///:memory:'):
+            file_path = db_uri.replace('sqlite:///', '')
+            dir_path = os.path.dirname(file_path)
+            if dir_path:
+                try:
+                    os.makedirs(dir_path, exist_ok=True)
+                except OSError:
+                    pass
+
         db.create_all()
 
         # Safe schema migration for SQLite (v1.0 -> v1.1)
