@@ -1,4 +1,4 @@
-﻿/**
+/**
  * FitTrack v1.1 - Smart Reminders Module
  */
 async function loadReminders() {
@@ -33,7 +33,7 @@ async function loadReminders() {
       if (!sessionStorage.getItem(`notified_${topRem.id}`)) {
         new Notification(`FitTrack: ${topRem.title}`, {
           body: topRem.message,
-          icon: '/static/css/favicon.ico'
+          icon: '/static/favicon.ico'
         });
         sessionStorage.setItem(`notified_${topRem.id}`, '1');
       }

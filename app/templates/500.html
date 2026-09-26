@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Server Error | FitTrack{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper" style="min-height: 60vh; text-align: center;">
+  <div class="card" style="max-width: 520px; margin: 2rem auto; padding: 2.5rem;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">⚠️</div>
+    <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem;">Server Error</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      An unexpected error occurred while processing your request. Please try again in a moment.
+    </p>
+    <div>
+      <a href="{{ url_for('dashboard.dashboard_view') if session.get('user_id') else url_for('auth.login_view') }}" class="btn btn-primary">
+        {{ 'Return to Dashboard' if session.get('user_id') else 'Go to Sign In' }}
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

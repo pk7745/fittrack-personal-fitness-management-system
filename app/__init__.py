@@ -55,42 +55,47 @@ def create_app(config_name='default'):
     app.register_blueprint(report_bp)
     app.register_blueprint(calendar_bp)
 
+    # Favicon Route
+    @app.route('/favicon.ico')
+    def favicon():
+        return app.send_static_file('favicon.ico')
+
     # Global Error Handlers (returning JSON for API, HTML for web)
     @app.errorhandler(400)
     def bad_request(e):
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'message': 'Bad request'}), 400
-        return render_template('base.html', error_title="400 - Bad Request", error_msg="The request could not be understood."), 400
+        return render_template('404.html'), 400
 
     @app.errorhandler(401)
     def unauthorized(e):
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'message': 'Authentication required'}), 401
-        return render_template('base.html', error_title="401 - Unauthorized", error_msg="Please log in to continue."), 401
+        return render_template('404.html'), 401
 
     @app.errorhandler(403)
     def forbidden(e):
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'message': 'Forbidden. You do not have permission.'}), 403
-        return render_template('base.html', error_title="403 - Forbidden", error_msg="Access denied."), 403
+        return render_template('404.html'), 403
 
     @app.errorhandler(404)
     def not_found(e):
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'message': 'Resource not found'}), 404
-        return render_template('base.html', error_title="404 - Not Found", error_msg="The requested page could not be found."), 404
+        return render_template('404.html'), 404
 
     @app.errorhandler(409)
     def conflict(e):
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'message': 'Conflict occurred.'}), 409
-        return render_template('base.html', error_title="409 - Conflict", error_msg="Resource conflict."), 409
+        return render_template('404.html'), 409
 
     @app.errorhandler(500)
     def internal_server_error(e):
         if request.path.startswith('/api/'):
             return jsonify({'success': False, 'message': 'Internal server error'}), 500
-        return render_template('base.html', error_title="500 - Server Error", error_msg="An unexpected error occurred."), 500
+        return render_template('500.html'), 500
 
     # Initialize database tables and run safe incremental migrations
     with app.app_context():

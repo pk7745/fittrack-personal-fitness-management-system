@@ -6,6 +6,10 @@
   <meta name="description" content="FitTrack v1.1 - Personal Fitness Management & Real-Time Productivity System">
   <title>{% block title %}FitTrack | Personal Fitness Management{% endblock %}</title>
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="alternate icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   
@@ -112,15 +116,6 @@
     <!-- Main Content Area -->
     <div class="app-main">
       <main class="main-content">
-        {% block content %}{% endblock %}
-      </main>
-
-      <footer class="footer">
-        <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System v1.1 &bull; Real-Time & Productivity</p>
-      </footer>
-    </div>
-  </div>
-
   {% else %}
   <!-- Unauthenticated Top Navbar -->
   <header class="navbar auth-navbar">
@@ -139,7 +134,19 @@
   </header>
 
   <main class="main-content">
-    {% block content_auth %}{% block content_unauth %}{% endblock %}{% endblock %}
+  {% endif %}
+
+        {% block content %}{% endblock %}
+
+  {% if session.get('user_id') %}
+      </main>
+
+      <footer class="footer">
+        <p>&copy; 2026 FitTrack &bull; Personal Fitness Management System v1.1 &bull; Real-Time & Productivity</p>
+      </footer>
+    </div>
+  </div>
+  {% else %}
   </main>
 
   <footer class="footer">
