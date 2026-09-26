@@ -126,4 +126,87 @@ def create_app(config_name='default'):
         except Exception:
             pass
 
+        # Seed initial demo account if not testing
+        if config_name != 'testing':
+            try:
+                from app.models import User, Workout, FitnessRecord, Goal, ReminderPreference
+                from datetime import date, timedelta
+                demo_user = User.query.filter_by(email='demo@fittrack.com').first()
+                if not demo_user:
+                    demo_user = User(
+                        name='Pavan Kumar',
+                        email='demo@fittrack.com',
+                        age=24,
+                        gender='Male',
+                        height=175.0,
+                        weight=68.5,
+                        fitness_goal='Muscle Building & General Fitness'
+                    )
+                    demo_user.set_password('Password123!')
+                    db.session.add(demo_user)
+                    db.session.commit()
+
+                    today = date.today()
+                    sample_weights = [70.0, 69.8, 69.5, 69.2, 69.0, 68.7, 68.5]
+                    sample_waters = [2.0, 2.4, 1.8, 2.5, 2.2, 2.7, 2.5]
+                    sample_calories = [2100, 1950, 2200, 1850, 2050, 1900, 1850]
+                    for i in range(7):
+                        rec = FitnessRecord(
+                            user_id=demo_user.id,
+                            record_date=today - timedelta(days=6 - i),
+                            weight=sample_weights[i],
+                            height=175.0,
+                            water_intake=sample_waters[i],
+                            calories_burned=sample_calories[i]
+                        )
+                        db.session.add(rec)
+
+                    sample_workouts = [
+                        (today - timedelta(days=5), 'Running', 35, 340, 'Morning endurance run'),
+                        (today - timedelta(days=4), 'Strength Training', 50, 420, 'Upper body hypertrophy'),
+                        (today - timedelta(days=2), 'Cycling', 45, 380, 'Outdoor interval cycling'),
+                        (today - timedelta(days=1), 'HIIT', 30, 310, 'Core and cardio circuit'),
+                        (today, 'Strength Training', 60, 480, 'Legs and shoulders session')
+                    ]
+                    for w_date, w_type, w_dur, w_cal, w_notes in sample_workouts:
+                        db.session.add(Workout(
+                            user_id=demo_user.id,
+                            date=w_date,
+                            workout_type=w_type,
+                            duration=w_dur,
+                            calories_burned=w_cal,
+                            notes=w_notes
+                        ))
+
+                    g1 = Goal(
+                        user_id=demo_user.id,
+                        goal_type='Weight Loss',
+                        target_value=65.0,
+                        current_value=68.5,
+                        start_value=70.0,
+                        deadline=today + timedelta(days=45),
+                        status='In Progress'
+                    )
+                    g2 = Goal(
+                        user_id=demo_user.id,
+                        goal_type='Muscle Building',
+                        target_value=20.0,
+                        current_value=12.0,
+                        start_value=0.0,
+                        deadline=today + timedelta(days=30),
+                        status='In Progress'
+                    )
+                    pref = ReminderPreference(
+                        user_id=demo_user.id,
+                        workout_reminder=True,
+                        daily_fitness_reminder=True,
+                        goal_deadline_reminder=True,
+                        hydration_reminder=True,
+                        hydration_target=2.5
+                    )
+                    db.session.add_all([g1, g2, pref])
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
+
     return app
